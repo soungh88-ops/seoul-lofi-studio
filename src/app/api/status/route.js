@@ -105,7 +105,7 @@ export async function GET(request) {
     return NextResponse.json({
       status: "list",
       models: combinedModels,
-      defaultModel: "gemini-flash-latest"
+      defaultModel: "gemini-3.5-flash"
     }, { headers });
   } catch (error) {
     console.error("[API Status Error]", error);
