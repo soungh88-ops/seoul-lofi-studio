@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -20,11 +21,10 @@ export default function Home() {
   // Custom User MP3 Music Files State
   const [customAudioFiles, setCustomAudioFiles] = useState([]);
 
-  // Passcode Security & Lazy AI Gate State (Passcode: 28281818)
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passcodeInput, setPasscodeInput] = useState("");
-  const [passcodeError, setPasscodeError] = useState(false);
+  // Google OAuth Session
+  const { data: session, status } = useSession();
   const [aiCheckStatus, setAiCheckStatus] = useState("idle");
+  const [showKaggleGuide, setShowKaggleGuide] = useState(false);
 
   // Gemini Prompts States
   const [visualPrompts, setVisualPrompts] = useState([
@@ -233,7 +233,7 @@ export default function Home() {
 
   const [showHookingTitle, setShowHookingTitle] = useState(false);
   const [hookingTitleText, setHookingTitleText] = useState("");
-  const [hookingTextColor, setHookingTextColor] = useState("#00ffcc");
+  const [hookingTextColor, setHookingTextColor] = useState("#e82127");
   const [hookingFontSize, setHookingFontSize] = useState(24);
 
   const [mascotKoDesc, setMascotKoDesc] = useState("사이버 네온 한복 아머와 LED 마스크, LOFI 이퀄라이저 팔토시 및 네온 방망이를 들고 삼면(전면/측면/후면) 콘셉트 아트를 장착한 공식 DOKKAEBI KOREA LOFI 도깨비 캐릭터");
@@ -330,7 +330,7 @@ export default function Home() {
   const animationFrameRef = useRef(null);
 
   useEffect(() => {
-    if (!audioPlayerRef.current || !isAuthenticated) return;
+    if (!audioPlayerRef.current || !session) return;
 
     let audioCtx;
     let source;
@@ -412,14 +412,12 @@ export default function Home() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isAuthenticated]);
+  }, [session]);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
       try {
-        const savedAuth = sessionStorage.getItem("lofi_studio_authenticated");
-        if (savedAuth === "true") setIsAuthenticated(true);
 
         const savedConnected = sessionStorage.getItem("gemini_api_connected");
         const savedModel = sessionStorage.getItem("gemini_selected_model");
@@ -499,22 +497,7 @@ export default function Home() {
     thumbnailBadgeText
   ]);
 
-  const handlePasscodeSubmit = (e) => {
-    e.preventDefault();
-    if (passcodeInput.trim() === "28281818") {
-      setPasscodeError(false);
-      setAiCheckStatus("checking");
-      setTimeout(() => {
-        setAiCheckStatus("success");
-        setTimeout(() => {
-          setIsAuthenticated(true);
-          try { sessionStorage.setItem("lofi_studio_authenticated", "true"); } catch (e) {}
-        }, 600);
-      }, 1200);
-    } else {
-      setPasscodeError(true);
-    }
-  };
+
 
   const handleFileUpload = (file) => {
     if (!file) return;
@@ -1126,82 +1109,125 @@ export default function Home() {
     callback();
   };
 
-  // Passcode Security View
-  if (!isAuthenticated) {
+  // Next-Auth session loading state
+  if (status === "loading") {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#000000",
+        color: "#ffffff"
+      }}>
+        <div style={{ 
+          width: "40px", 
+          height: "40px", 
+          border: "2px solid rgba(255,255,255,0.1)", 
+          borderTopColor: "#e82127", 
+          borderRadius: "50%", 
+          animation: "spin 1s linear infinite" 
+        }} />
+        <div style={{ 
+          marginTop: "16px", 
+          fontSize: "12px", 
+          letterSpacing: "3px", 
+          color: "#888888", 
+          fontWeight: "700" 
+        }}>
+          CONNECTING STUDIO...
+        </div>
+      </div>
+    );
+  }
+
+  // Next-Auth session check
+  if (!session) {
+    const errorParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("error") : null;
     return (
       <div style={{
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "radial-gradient(circle at center, #1a0a2a 0%, #05030a 100%)",
+        background: "radial-gradient(circle at center, #111111 0%, #000000 100%)",
         padding: "20px"
       }}>
         <div className="glass-panel" style={{
           width: "100%",
           maxWidth: "440px",
-          padding: "40px 30px",
-          borderRadius: "16px",
+          padding: "48px 36px",
+          borderRadius: "12px",
           textAlign: "center",
-          boxShadow: "0 0 30px rgba(180, 50, 255, 0.2)"
+          background: "rgba(23, 23, 23, 0.8)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔒</div>
-          <h1 className="gradient-text" style={{ fontSize: "24px", fontWeight: "800", marginBottom: "8px" }}>
-            서울 로파이 스튜디오 🌙
+          <div style={{ fontSize: "36px", marginBottom: "20px" }}>👹</div>
+          <h1 style={{ 
+            fontSize: "26px", 
+            fontWeight: "800", 
+            letterSpacing: "4px", 
+            color: "#ffffff",
+            marginBottom: "6px",
+            textTransform: "uppercase"
+          }}>
+            Seoul Lofi
           </h1>
-          <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginBottom: "24px" }}>
-            비공개 보안 접속 & Google AI 지연 연결 점검
+          <p style={{ 
+            fontSize: "12px", 
+            letterSpacing: "2px", 
+            color: "#888888", 
+            fontWeight: "700",
+            marginBottom: "36px",
+            textTransform: "uppercase"
+          }}>
+            Creator Console
           </p>
 
-          {aiCheckStatus === "idle" && (
-            <form onSubmit={handlePasscodeSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <input 
-                type="password"
-                value={passcodeInput}
-                onChange={(e) => setPasscodeInput(e.target.value)}
-                placeholder="비밀번호 8자리를 입력하세요"
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  borderRadius: "8px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid var(--glass-border)",
-                  color: "#ffffff",
-                  fontSize: "16px",
-                  textAlign: "center",
-                  letterSpacing: "4px"
-                }}
-                autoFocus
-              />
-              {passcodeError && (
-                <div style={{ color: "#ff4d6d", fontSize: "13px" }}>
-                  ❌ 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.
-                </div>
-              )}
-              <button type="submit" className="btn-primary" style={{ width: "100%", padding: "14px", fontSize: "15px", fontWeight: "700", marginTop: "6px" }}>
-                🔓 스튜디오 보안 접속
-              </button>
-            </form>
-          )}
+          <button 
+            onClick={() => signIn("google")}
+            style={{
+              width: "100%",
+              padding: "16px",
+              borderRadius: "30px",
+              background: "#ffffff",
+              border: "none",
+              color: "#000000",
+              fontSize: "15px",
+              fontWeight: "700",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              transition: "all 0.2s ease"
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = "#f4f4f4"}
+            onMouseOut={(e) => e.currentTarget.style.background = "#ffffff"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+            </svg>
+            Google 계정으로 로그인
+          </button>
 
-          {aiCheckStatus === "checking" && (
-            <div style={{ padding: "20px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-              <div style={{ width: "36px", height: "36px", border: "3px solid #00ffcc", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-              <div style={{ fontSize: "15px", fontWeight: "700", color: "#00ffcc" }}>
-                🤖 Google AI 지연 연결 점검 중...
-              </div>
-            </div>
-          )}
-
-          {aiCheckStatus === "success" && (
-            <div style={{ padding: "20px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-              <div style={{ fontSize: "36px" }}>🟢</div>
-              <div style={{ fontSize: "16px", fontWeight: "800", color: "#00ffcc" }}>
-                Google AI 모델 상태 정상 (100% 준비 완료)
-              </div>
-              <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                스튜디오로 진입합니다...
-              </div>
+          {errorParam === "AccessDenied" && (
+            <div style={{ 
+              marginTop: "24px", 
+              padding: "12px", 
+              borderRadius: "8px", 
+              background: "rgba(232, 33, 39, 0.1)", 
+              border: "1px solid rgba(232, 33, 39, 0.2)",
+              color: "#e82127", 
+              fontSize: "13px",
+              lineHeight: "1.5"
+            }}>
+              ⚠️ 접근 권한이 없는 구글 계정입니다.<br/>허용된 크리에이터 계정으로 다시 시도해 주세요.
             </div>
           )}
         </div>
@@ -1210,17 +1236,36 @@ export default function Home() {
   }
 
   return (
-    <div style={{ padding: "40px 20px", maxWidth: "1400px", margin: "0 auto" }}>
+    <div style={{ padding: "40px 20px", maxWidth: "1400px", margin: "0 auto", position: "relative" }}>
       {/* Hidden Global Audio Player */}
       <audio ref={audioPlayerRef} style={{ display: "none" }} crossOrigin="anonymous" />
 
       {/* Top Header */}
-      <header style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h1 className="gradient-text text-glow-purple" style={{ fontFamily: "var(--font-outfit)", fontSize: "42px", fontWeight: "800", letterSpacing: "-1px" }}>
-          Dokkaebi Lofi Studio 👹🌙 [서울 로파이]
+      <header style={{ marginBottom: "30px", textAlign: "center", position: "relative" }}>
+        <button 
+          onClick={() => signOut()} 
+          className="btn-secondary" 
+          style={{ 
+            position: "absolute", 
+            top: "0px", 
+            right: "0px", 
+            padding: "8px 16px", 
+            fontSize: "11px" 
+          }}
+        >
+          LOG OUT
+        </button>
+        <h1 className="gradient-text text-glow-red" style={{ 
+          fontFamily: "var(--font-outfit)", 
+          fontSize: "36px", 
+          fontWeight: "800", 
+          letterSpacing: "4px",
+          textTransform: "uppercase" 
+        }}>
+          Dokkaebi Lofi Studio 👹🌙
         </h1>
-        <p style={{ color: "var(--text-secondary)", marginTop: "8px", fontSize: "16px" }}>
-          Dokkaebi 4K Thumbnail Engine & 20-Track Storytelling Lofi Publisher
+        <p style={{ color: "var(--text-secondary)", marginTop: "6px", fontSize: "14px", letterSpacing: "1px" }}>
+          DOKKAEBI 4K THUMBNAIL ENGINE & 20-TRACK STORYTELLING LOFI PUBLISHER
         </p>
       </header>
 
@@ -1228,8 +1273,8 @@ export default function Home() {
       <div className="glass-panel" style={{ 
         marginBottom: "20px", 
         padding: "14px 20px", 
-        border: "1px solid rgba(0, 255, 204, 0.4)",
-        background: "rgba(0, 255, 204, 0.05)",
+        border: "1px solid var(--glass-border)",
+        background: "var(--bg-secondary)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1237,10 +1282,10 @@ export default function Home() {
         flexWrap: "wrap"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "20px" }}>🟢</span>
+          <span style={{ fontSize: "12px", color: "var(--accent-red)" }}>●</span>
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "800", color: "#00ffcc" }}>
-              Google Gemini AI 엔진 연결 상태: 100% 정상 (API Key 활성화됨)
+            <div style={{ fontSize: "13px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "1px" }}>
+              GOOGLE GEMINI AI ENGINE ACTIVE
             </div>
             <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
               자동 프롬프트 생성, 한글 동기화 번역, AI 채팅 코칭이 제미나이 엔진으로 가동 중입니다.
@@ -1258,8 +1303,8 @@ export default function Home() {
             }}
             style={{
               background: "#05030a",
-              color: "#00ffcc",
-              border: "1px solid #00ffcc",
+              color: "#e82127",
+              border: "1px solid #e82127",
               padding: "6px 12px",
               borderRadius: "6px",
               fontSize: "12px",
@@ -1300,9 +1345,9 @@ export default function Home() {
               padding: "6px 14px",
               fontSize: "12px",
               fontWeight: "800",
-              background: "rgba(0, 255, 204, 0.2)",
-              color: "#00ffcc",
-              border: "1px solid #00ffcc",
+              background: "rgba(232, 33, 39, 0.2)",
+              color: "#e82127",
+              border: "1px solid #e82127",
               borderRadius: "6px",
               cursor: "pointer",
               opacity: isTestingApi ? 0.5 : 1
@@ -1317,8 +1362,8 @@ export default function Home() {
       <div className="glass-panel" style={{ 
         marginBottom: "20px", 
         padding: "16px 20px", 
-        border: "1px solid rgba(168, 85, 247, 0.4)",
-        background: "rgba(168, 85, 247, 0.05)",
+        border: "1px solid rgba(232, 33, 39, 0.4)",
+        background: "rgba(232, 33, 39, 0.05)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1328,7 +1373,7 @@ export default function Home() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: "300px" }}>
           <div style={{ fontSize: "28px" }}>📂</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: "14px", fontWeight: "800", color: "#a855f7", marginBottom: "4px" }}>
+            <div style={{ fontSize: "14px", fontWeight: "800", color: "#e82127", marginBottom: "4px" }}>
               프로젝트 변경 & 새 채널 브랜딩 선택기
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -1361,8 +1406,8 @@ export default function Home() {
                 }}
                 style={{
                   background: "#0a0612",
-                  color: "#00ffcc",
-                  border: "1px solid rgba(0, 255, 204, 0.4)",
+                  color: "#e82127",
+                  border: "1px solid rgba(232, 33, 39, 0.4)",
                   padding: "8px 12px",
                   borderRadius: "6px",
                   fontSize: "13px",
@@ -1402,11 +1447,11 @@ export default function Home() {
         <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
 
           {/* AI Recommended Topic & Chat */}
-          <div className="glass-panel" style={{ borderColor: "rgba(0, 255, 204, 0.6)", boxShadow: "0 0 30px rgba(0, 255, 204, 0.25)" }}>
+          <div className="glass-panel" style={{ borderColor: "rgba(232, 33, 39, 0.6)", boxShadow: "0 0 30px rgba(232, 33, 39, 0.25)" }}>
             
-            <div style={{ background: "rgba(0, 255, 204, 0.08)", border: "1px solid rgba(0, 255, 204, 0.3)", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ background: "rgba(232, 33, 39, 0.08)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: "800", color: "#00ffcc", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "14px", fontWeight: "800", color: "#e82127", display: "flex", alignItems: "center", gap: "6px" }}>
                   🏆 [현재 활성화된 추천 주제]
                 </span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -1414,9 +1459,9 @@ export default function Home() {
                     type="button"
                     onClick={() => setShowMonthCalendar(!showMonthCalendar)}
                     style={{
-                      background: showMonthCalendar ? "rgba(168, 85, 247, 0.3)" : "rgba(0, 255, 204, 0.2)",
-                      border: showMonthCalendar ? "1px solid #a855f7" : "1px solid #00ffcc",
-                      color: showMonthCalendar ? "#a855f7" : "#00ffcc",
+                      background: showMonthCalendar ? "rgba(232, 33, 39, 0.3)" : "rgba(232, 33, 39, 0.2)",
+                      border: showMonthCalendar ? "1px solid #e82127" : "1px solid #e82127",
+                      color: showMonthCalendar ? "#e82127" : "#e82127",
                       padding: "4px 10px",
                       borderRadius: "6px",
                       fontSize: "11px",
@@ -1448,7 +1493,7 @@ export default function Home() {
                   flexDirection: "column",
                   gap: "6px"
                 }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", color: "#a855f7", marginBottom: "4px", display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", color: "#e82127", marginBottom: "4px", display: "flex", justifyContent: "space-between" }}>
                     <span>🗓️ 30일치 요일별 킬러 주제 목록 (원하는 날짜 선택):</span>
                     <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>원클릭 주제 전환 가능</span>
                   </div>
@@ -1486,8 +1531,8 @@ export default function Home() {
                         }}
                         style={{
                           padding: "8px 12px",
-                          background: isSelectedItem ? "rgba(0, 255, 204, 0.2)" : "rgba(255,255,255,0.03)",
-                          border: isSelectedItem ? "2px solid #00ffcc" : "1px solid var(--glass-border)",
+                          background: isSelectedItem ? "rgba(232, 33, 39, 0.2)" : "rgba(255,255,255,0.03)",
+                          border: isSelectedItem ? "2px solid #e82127" : "1px solid var(--glass-border)",
                           borderRadius: "6px",
                           fontSize: "12px",
                           color: "#fff",
@@ -1497,10 +1542,10 @@ export default function Home() {
                           alignItems: "center"
                         }}
                       >
-                        <span style={{ fontWeight: isSelectedItem ? "800" : "700", color: isSelectedItem ? "#00ffcc" : "#fff" }}>
+                        <span style={{ fontWeight: isSelectedItem ? "800" : "700", color: isSelectedItem ? "#e82127" : "#fff" }}>
                           {item.day}: {item.title} {isSelectedItem ? "🟢 [현재 선택됨]" : ""}
                         </span>
-                        <span style={{ fontSize: "11px", color: isSelectedItem ? "#00ffcc" : "#ffb703", background: isSelectedItem ? "rgba(0,255,204,0.2)" : "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "4px" }}>
+                        <span style={{ fontSize: "11px", color: isSelectedItem ? "#e82127" : "#e2e8f0", background: isSelectedItem ? "rgba(232, 33, 39,0.2)" : "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "4px" }}>
                           {isSelectedItem ? "✓ 적용중" : "👉 이 주제 선택"}
                         </span>
                       </div>
@@ -1516,9 +1561,9 @@ export default function Home() {
                 {topTrendingTheme.desc}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "12px" }}>
-                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#ffb703" }}>{topTrendingTheme.viewPotential}</span>
-                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#b432ff" }}>🎻 {topTrendingTheme.targetInstruments}</span>
-                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#00ffcc" }}>🧠 {topTrendingTheme.brainwave}</span>
+                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e2e8f0" }}>{topTrendingTheme.viewPotential}</span>
+                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e82127" }}>🎻 {topTrendingTheme.targetInstruments}</span>
+                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e82127" }}>🧠 {topTrendingTheme.brainwave}</span>
               </div>
             </div>
 
@@ -1531,7 +1576,7 @@ export default function Home() {
                   <div key={idx} style={{
                     alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
                     maxWidth: "85%",
-                    background: msg.sender === "user" ? "rgba(180,50,255,0.3)" : "rgba(255,255,255,0.08)",
+                    background: msg.sender === "user" ? "rgba(232, 33, 39,0.3)" : "rgba(255,255,255,0.08)",
                     border: msg.sender === "user" ? "1px solid var(--accent-purple)" : "1px solid var(--glass-border)",
                     borderRadius: "10px",
                     padding: "8px 12px",
@@ -1542,7 +1587,7 @@ export default function Home() {
                   </div>
                 ))}
                 {isAiThinking && (
-                  <div style={{ alignSelf: "flex-start", fontSize: "12px", color: "#00ffcc", fontStyle: "italic" }}>🤖 답변 작성 중...</div>
+                  <div style={{ alignSelf: "flex-start", fontSize: "12px", color: "#e82127", fontStyle: "italic" }}>🤖 답변 작성 중...</div>
                 )}
               </div>
               <form onSubmit={handleSendChatMessage} style={{ display: "flex", gap: "8px" }}>
@@ -1583,8 +1628,8 @@ export default function Home() {
               }}
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: isDragging ? "2px dashed #00ffcc" : userMediaUrl ? "2px solid #00ffcc" : "2px dashed var(--glass-border)",
-                background: isDragging ? "rgba(0, 255, 204, 0.1)" : userMediaUrl ? "rgba(0, 255, 204, 0.03)" : "rgba(0, 0, 0, 0.3)",
+                border: isDragging ? "2px dashed #e82127" : userMediaUrl ? "2px solid #e82127" : "2px dashed var(--glass-border)",
+                background: isDragging ? "rgba(232, 33, 39, 0.1)" : userMediaUrl ? "rgba(232, 33, 39, 0.03)" : "rgba(0, 0, 0, 0.3)",
                 borderRadius: "12px",
                 padding: "20px",
                 textAlign: "center",
@@ -1605,7 +1650,7 @@ export default function Home() {
                 }}
               />
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>{userMediaUrl ? "✅" : "📁"}</div>
-              <div style={{ fontSize: "14px", fontWeight: "800", color: userMediaUrl ? "#00ffcc" : "#ffffff", marginBottom: "4px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "800", color: userMediaUrl ? "#e82127" : "#ffffff", marginBottom: "4px" }}>
                 {userMediaUrl ? `첨부 완료: ${userMediaName || "비디오/이미지 자산"}` : "여기에 8초 비디오(.mp4) 또는 이미지(.jpg/.png)를 끌어다 놓으세요!"}
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
@@ -1623,14 +1668,14 @@ export default function Home() {
                     padding: "8px 16px",
                     fontSize: "12px",
                     fontWeight: "800",
-                    background: "linear-gradient(135deg, #00ffcc 0%, #00b4d8 100%)",
+                    background: "linear-gradient(135deg, #e82127 0%, #00b4d8 100%)",
                     color: "#000000",
                     borderRadius: "6px",
                     textDecoration: "none",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
-                    boxShadow: "0 0 15px rgba(0, 255, 204, 0.4)",
+                    boxShadow: "0 0 15px rgba(232, 33, 39, 0.4)",
                     cursor: "pointer"
                   }}
                 >
@@ -1663,7 +1708,7 @@ export default function Home() {
                 <div style={{ textAlign: "center", padding: "20px", color: "var(--text-secondary)", fontSize: "13px" }}>
                   <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.5 }}>🎬</div>
                   <div>위의 상자에 <strong>8초 비디오 파일</strong>을 첨부하시면</div>
-                  <div style={{ fontSize: "11px", marginTop: "4px", color: "#00ffcc" }}>여기서 8초 무한 루프 영상을 1초 만에 바로 미리보실 수 있습니다!</div>
+                  <div style={{ fontSize: "11px", marginTop: "4px", color: "#e82127" }}>여기서 8초 무한 루프 영상을 1초 만에 바로 미리보실 수 있습니다!</div>
                 </div>
               )}
 
@@ -1691,7 +1736,7 @@ export default function Home() {
                       position: "absolute",
                       inset: "-8px",
                       borderRadius: "50%",
-                      background: "radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 75%)",
+                      background: "radial-gradient(circle, rgba(232, 33, 39, 0.4) 0%, transparent 75%)",
                       opacity: 0.3 + audioLevels.treble * 0.7,
                       filter: "blur(8px)"
                     }}
@@ -1707,8 +1752,8 @@ export default function Home() {
                       objectFit: "cover",
                       borderRadius: "50%",
                       filter: `
-                        drop-shadow(0 0 ${5 + audioLevels.bass * 12}px rgba(0, 255, 204, ${0.4 + audioLevels.bass * 0.6}))
-                        drop-shadow(0 0 ${2 + audioLevels.mid * 8}px rgba(168, 85, 247, ${0.3 + audioLevels.mid * 0.7}))
+                        drop-shadow(0 0 ${5 + audioLevels.bass * 12}px rgba(232, 33, 39, ${0.4 + audioLevels.bass * 0.6}))
+                        drop-shadow(0 0 ${2 + audioLevels.mid * 8}px rgba(232, 33, 39, ${0.3 + audioLevels.mid * 0.7}))
                         brightness(${1.0 + audioLevels.mid * 0.25})
                       `,
                       transition: "filter 0.05s ease-out"
@@ -1722,11 +1767,11 @@ export default function Home() {
                       inset: "-4px",
                       border: "2.5px solid transparent",
                       borderRadius: "50%",
-                      backgroundImage: "linear-gradient(#05030a, #05030a), linear-gradient(to right, #a855f7, #00ffcc)",
+                      backgroundImage: "linear-gradient(#05030a, #05030a), linear-gradient(to right, #e82127, #e82127)",
                       backgroundOrigin: "border-box",
                       backgroundClip: "content-box, border-box",
                       animation: "spin 25s linear infinite",
-                      boxShadow: `0 0 ${3 + audioLevels.bass * 10}px #a855f7, inset 0 0 ${2 + audioLevels.mid * 5}px #00ffcc`,
+                      boxShadow: `0 0 ${3 + audioLevels.bass * 10}px #e82127, inset 0 0 ${2 + audioLevels.mid * 5}px #e82127`,
                       opacity: 0.85
                     }}
                   />
@@ -1759,7 +1804,7 @@ export default function Home() {
                       padding: "4px 12px",
                       fontSize: "11px",
                       fontWeight: "800",
-                      background: "#00ffcc",
+                      background: "#e82127",
                       color: "#000000",
                       border: "none",
                       borderRadius: "4px",
@@ -1805,9 +1850,9 @@ export default function Home() {
                       padding: "4px 12px",
                       fontSize: "11px",
                       fontWeight: "800",
-                      background: "rgba(0, 255, 204, 0.2)",
-                      color: "#00ffcc",
-                      border: "1px solid #00ffcc",
+                      background: "rgba(232, 33, 39, 0.2)",
+                      color: "#e82127",
+                      border: "1px solid #e82127",
                       borderRadius: "4px",
                       cursor: "pointer",
                       opacity: isGeneratingVideo ? 0.5 : 1
@@ -1825,7 +1870,7 @@ export default function Home() {
                 style={{
                   width: "100%",
                   background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(0, 255, 204, 0.4)",
+                  border: "1px solid rgba(232, 33, 39, 0.4)",
                   borderRadius: "8px",
                   padding: "12px",
                   color: "#fff",
@@ -1837,7 +1882,7 @@ export default function Home() {
               />
 
               {videoLog && (
-                <div style={{ marginTop: "8px", padding: "8px 12px", background: "rgba(0,0,0,0.6)", border: "1px solid var(--glass-border)", borderRadius: "6px", fontSize: "11px", color: "#00ffcc", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
+                <div style={{ marginTop: "8px", padding: "8px 12px", background: "rgba(0,0,0,0.6)", border: "1px solid var(--glass-border)", borderRadius: "6px", fontSize: "11px", color: "#e82127", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
                   {videoLog}
                 </div>
               )}
@@ -1859,9 +1904,9 @@ export default function Home() {
                   {visualPrompts.map((p, pIdx) => {
                     const isTranslating = translatingVisualPromptId === p.id;
                     return (
-                      <div key={p.id || pIdx} style={{ background: "rgba(0,0,0,0.4)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(0, 255, 204, 0.3)", fontSize: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div key={p.id || pIdx} style={{ background: "rgba(0,0,0,0.4)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(232, 33, 39, 0.3)", fontSize: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "#00ffcc", fontWeight: "800" }}>{p.title || `Visual Prompt #${pIdx + 1}`}</span>
+                          <span style={{ color: "#e82127", fontWeight: "800" }}>{p.title || `Visual Prompt #${pIdx + 1}`}</span>
                           <button
                             type="button"
                             onClick={() => handleTranslateVisualPrompt(p.id)}
@@ -1870,9 +1915,9 @@ export default function Home() {
                               padding: "4px 10px",
                               fontSize: "11px",
                               fontWeight: "700",
-                              background: "rgba(0, 255, 204, 0.15)",
-                              color: "#00ffcc",
-                              border: "1px solid #00ffcc",
+                              background: "rgba(232, 33, 39, 0.15)",
+                              color: "#e82127",
+                              border: "1px solid #e82127",
                               borderRadius: "4px",
                               cursor: "pointer"
                             }}
@@ -1913,9 +1958,9 @@ export default function Home() {
                                 padding: "2px 6px",
                                 fontSize: "10px",
                                 fontWeight: "700",
-                                background: copiedPromptId === `v_img_${p.id}` ? "#00ffcc" : "rgba(0, 255, 204, 0.1)",
-                                color: copiedPromptId === `v_img_${p.id}` ? "#000" : "#00ffcc",
-                                border: "1px solid #00ffcc",
+                                background: copiedPromptId === `v_img_${p.id}` ? "#e82127" : "rgba(232, 33, 39, 0.1)",
+                                color: copiedPromptId === `v_img_${p.id}` ? "#000" : "#e82127",
+                                border: "1px solid #e82127",
                                 borderRadius: "4px",
                                 cursor: "pointer"
                               }}
@@ -1957,9 +2002,9 @@ export default function Home() {
                                 padding: "2px 6px",
                                 fontSize: "10px",
                                 fontWeight: "700",
-                                background: copiedPromptId === `v_vid_${p.id}` ? "#00ffcc" : "rgba(0, 255, 204, 0.1)",
-                                color: copiedPromptId === `v_vid_${p.id}` ? "#000" : "#00ffcc",
-                                border: "1px solid #00ffcc",
+                                background: copiedPromptId === `v_vid_${p.id}` ? "#e82127" : "rgba(232, 33, 39, 0.1)",
+                                color: copiedPromptId === `v_vid_${p.id}` ? "#000" : "#e82127",
+                                border: "1px solid #e82127",
                                 borderRadius: "4px",
                                 cursor: "pointer"
                               }}
@@ -1999,13 +2044,13 @@ export default function Home() {
               <h2 style={{ fontSize: "18px", fontWeight: "800", color: "var(--accent-purple)", display: "flex", alignItems: "center", gap: "8px" }}>
                 🎵 [20곡 Lofi 음악 스튜디오]
               </h2>
-              <span className="badge badge-pending" style={{ fontSize: "11px", background: "rgba(180, 50, 255, 0.2)", color: "#b432ff", border: "1px solid #b432ff" }}>음악 영역</span>
+              <span className="badge badge-pending" style={{ fontSize: "11px", background: "rgba(232, 33, 39, 0.2)", color: "#e82127", border: "1px solid #e82127" }}>음악 영역</span>
             </div>
 
             {/* Target Duration Selector & Track Duration Config */}
             <div style={{ background: "rgba(255, 255, 255, 0.04)", padding: "12px 16px", borderRadius: "10px", border: "1px solid var(--glass-border)", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "13px", fontWeight: "700", color: "#00ffcc" }}>⏱️ 최종 영상 길이:</span>
+                <span style={{ fontSize: "13px", fontWeight: "700", color: "#e82127" }}>⏱️ 최종 영상 길이:</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[1, 2, 3].map((hr) => (
                     <button
@@ -2017,9 +2062,9 @@ export default function Home() {
                         fontSize: "12px",
                         fontWeight: "800",
                         borderRadius: "6px",
-                        border: targetDurationHours === hr ? "2px solid #00ffcc" : "1px solid rgba(255,255,255,0.2)",
-                        background: targetDurationHours === hr ? "rgba(0,255,204,0.2)" : "rgba(0,0,0,0.4)",
-                        color: targetDurationHours === hr ? "#00ffcc" : "#aaa",
+                        border: targetDurationHours === hr ? "2px solid #e82127" : "1px solid rgba(255,255,255,0.2)",
+                        background: targetDurationHours === hr ? "rgba(232, 33, 39,0.2)" : "rgba(0,0,0,0.4)",
+                        color: targetDurationHours === hr ? "#e82127" : "#aaa",
                         cursor: "pointer"
                       }}
                     >
@@ -2030,7 +2075,7 @@ export default function Home() {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                <span style={{ fontSize: "13px", fontWeight: "700", color: "#a855f7" }}>⏱️ 곡당 목표 시간 세팅:</span>
+                <span style={{ fontSize: "13px", fontWeight: "700", color: "#e82127" }}>⏱️ 곡당 목표 시간 세팅:</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[
                     { min: 3, label: "3분 (180초, 기본)" },
@@ -2046,9 +2091,9 @@ export default function Home() {
                         fontSize: "11px",
                         fontWeight: "800",
                         borderRadius: "6px",
-                        border: trackDurationMinutes === dur.min ? "2px solid #a855f7" : "1px solid rgba(255,255,255,0.15)",
-                        background: trackDurationMinutes === dur.min ? "rgba(168,85,247,0.25)" : "rgba(0,0,0,0.4)",
-                        color: trackDurationMinutes === dur.min ? "#a855f7" : "#aaa",
+                        border: trackDurationMinutes === dur.min ? "2px solid #e82127" : "1px solid rgba(255,255,255,0.15)",
+                        background: trackDurationMinutes === dur.min ? "rgba(232, 33, 39,0.25)" : "rgba(0,0,0,0.4)",
+                        color: trackDurationMinutes === dur.min ? "#e82127" : "#aaa",
                         cursor: "pointer"
                       }}
                     >
@@ -2078,9 +2123,9 @@ export default function Home() {
                 }
               }}
               style={{
-                background: "rgba(168, 85, 247, 0.12)",
-                border: "2px dashed #a855f7",
-                boxShadow: "0 0 15px rgba(168, 85, 247, 0.2)",
+                background: "rgba(232, 33, 39, 0.12)",
+                border: "2px dashed #e82127",
+                boxShadow: "0 0 15px rgba(232, 33, 39, 0.2)",
                 borderRadius: "10px",
                 padding: "16px",
                 marginBottom: "14px",
@@ -2089,7 +2134,7 @@ export default function Home() {
                 transition: "all 0.2s"
               }}
             >
-              <div style={{ fontSize: "14px", fontWeight: "900", color: "#00ffcc", marginBottom: "4px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "900", color: "#e82127", marginBottom: "4px" }}>
                 📂 [20곡 한꺼번에 드래그 앤 드롭 파일 선택] (Suno/Udio/MusicFX 제작 파일)
               </div>
               <div style={{ fontSize: "12px", color: "#e2e8f0", marginBottom: "10px" }}>
@@ -2102,10 +2147,10 @@ export default function Home() {
                 multiple 
                 accept="audio/*" 
                 onChange={(e) => handleAudioFilesUpload(e.target.files)}
-                style={{ fontSize: "12px", color: "#a855f7", cursor: "pointer" }}
+                style={{ fontSize: "12px", color: "#e82127", cursor: "pointer" }}
               />
               {Object.keys(customAudioTracks).length > 0 && (
-                <div style={{ marginTop: "10px", fontSize: "12px", color: "#00ffcc", fontWeight: "900" }}>
+                <div style={{ marginTop: "10px", fontSize: "12px", color: "#e82127", fontWeight: "900" }}>
                   ✓ 총 {Object.keys(customAudioTracks).length}개 트랙 슬롯에 음원이 꽂혀있습니다. (미첨부 슬롯은 AI 음원으로 자동 채움)
                 </div>
               )}
@@ -2123,7 +2168,7 @@ export default function Home() {
                   fontSize: "14px",
                   fontWeight: "800",
                   justifyContent: "center",
-                  background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                  background: "linear-gradient(135deg, #e82127 0%, #ec4899 100%)",
                   opacity: !isApiConnected ? 0.5 : 1
                 }}
               >
@@ -2133,7 +2178,7 @@ export default function Home() {
 
             {/* Master Volume Slider */}
             <div style={{ background: "rgba(0,0,0,0.4)", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--glass-border)", marginBottom: "14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "#00ffcc" }}>🔊 음악 마스터 볼륨:</span>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#e82127" }}>🔊 음악 마스터 볼륨:</span>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "60%" }}>
                 <input 
                   type="range" 
@@ -2148,13 +2193,59 @@ export default function Home() {
                   }}
                   style={{ width: "100%" }}
                 />
-                <span style={{ fontSize: "12px", color: "#a855f7", fontWeight: "800", minWidth: "36px" }}>{Math.round(masterVolume * 100)}%</span>
+                <span style={{ fontSize: "12px", color: "#e82127", fontWeight: "800", minWidth: "36px" }}>{Math.round(masterVolume * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Tesla-style Real-time Audio HUD Visualizer */}
+            <div style={{
+              background: "rgba(0,0,0,0.6)",
+              border: "1px solid var(--glass-border)",
+              borderRadius: "8px",
+              padding: "12px 14px",
+              marginBottom: "14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "11px", fontWeight: "800", color: "var(--text-secondary)", letterSpacing: "1px" }}>AUDIO HUD SPECTRUM</span>
+                <span style={{ fontSize: "10px", color: "var(--accent-red)", fontWeight: "800", fontFamily: "monospace" }}>
+                  BASS: {Math.round(audioLevels.bass * 100)}% | MID: {Math.round(audioLevels.mid * 100)}% | TREBLE: {Math.round(audioLevels.treble * 100)}%
+                </span>
+              </div>
+              <div className="visualizer-container" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: "40px", padding: "4px 0", background: "rgba(0,0,0,0.3)", borderRadius: "4px" }}>
+                {Array.from({ length: 28 }).map((_, i) => {
+                  let level = 0.05;
+                  if (i < 5 || i > 22) {
+                    level = audioLevels.bass * (0.4 + Math.sin(i) * 0.4);
+                  } else if (i >= 5 && i < 11 || i > 16 && i <= 22) {
+                    level = audioLevels.mid * (0.4 + Math.cos(i) * 0.4);
+                  } else {
+                    level = audioLevels.treble * (0.4 + Math.sin(i) * 0.4);
+                  }
+                  // Normalize height
+                  const heightVal = Math.max(4, level * 36);
+                  return (
+                    <div 
+                      key={i} 
+                      className="visualizer-bar" 
+                      style={{ 
+                        height: `${heightVal}px`,
+                        width: "3px",
+                        background: "var(--accent-red)",
+                        borderRadius: "1px",
+                        transition: "height 0.05s ease" 
+                      }} 
+                    />
+                  );
+                })}
               </div>
             </div>
 
             {/* 20 Dedicated Track Slots (Strict 1..20 Order with Individual Drag&Drop) */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "380px", overflowY: "auto", paddingRight: "4px" }}>
-              <div style={{ fontSize: "12px", color: "#00ffcc", fontWeight: "800", marginBottom: "2px" }}>
+              <div style={{ fontSize: "12px", color: "#e82127", fontWeight: "800", marginBottom: "2px" }}>
                 🎵 20곡 개별 지정 슬롯 (트랙 01 ~ 트랙 20 꽂기 & 프롬프트 복사):
               </div>
               {sample20Tracks.map((track, idx) => {
@@ -2171,10 +2262,10 @@ export default function Home() {
                   <div 
                     key={trackNum} 
                     style={{ 
-                      background: isCurrentPlaying ? "rgba(168, 85, 247, 0.2)" : "rgba(0,0,0,0.4)", 
+                      background: isCurrentPlaying ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)", 
                       padding: "10px 12px", 
                       borderRadius: "8px", 
-                      border: hasValidTrack ? "1px solid #00ffcc" : isCurrentPlaying ? "1px solid #a855f7" : "1px solid rgba(255, 255, 255, 0.1)",
+                      border: hasValidTrack ? "1px solid #e82127" : isCurrentPlaying ? "1px solid #e82127" : "1px solid rgba(255, 255, 255, 0.1)",
                       display: "flex", 
                       flexDirection: "column", 
                       gap: "6px" 
@@ -2187,13 +2278,13 @@ export default function Home() {
                           style={{ 
                             fontSize: "11px", 
                             fontWeight: "800",
-                            background: hasValidTrack ? "#00ffcc" : "rgba(255, 255, 255, 0.1)",
+                            background: hasValidTrack ? "#e82127" : "rgba(255, 255, 255, 0.1)",
                             color: hasValidTrack ? "#000000" : "#94a3b8"
                           }}
                         >
                           {hasValidTrack ? `🟢 트랙 ${trackNoStr} 꽂힘` : `⚪ 트랙 ${trackNoStr} 비어있음`}
                         </span>
-                        <span style={{ fontSize: "12px", fontWeight: "800", color: isCurrentPlaying ? "#00ffcc" : "#e2e8f0" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "800", color: isCurrentPlaying ? "#e82127" : "#e2e8f0" }}>
                           {sampleTrack.titleKo}
                         </span>
                       </div>
@@ -2221,9 +2312,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "700",
-                            background: isCurrentPlaying ? "#ff4d6d" : "rgba(0, 255, 204, 0.15)",
-                            color: isCurrentPlaying ? "#fff" : "#00ffcc",
-                            border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #00ffcc",
+                            background: isCurrentPlaying ? "#ff4d6d" : "rgba(232, 33, 39, 0.15)",
+                            color: isCurrentPlaying ? "#fff" : "#e82127",
+                            border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #e82127",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2239,9 +2330,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "800",
-                            background: "rgba(168, 85, 247, 0.2)",
-                            color: "#a855f7",
-                            border: "1px solid #a855f7",
+                            background: "rgba(232, 33, 39, 0.2)",
+                            color: "#e82127",
+                            border: "1px solid #e82127",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2268,9 +2359,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "700",
-                            background: copiedPromptId === `m_${trackNum}` ? "#a855f7" : "rgba(0, 255, 204, 0.15)",
-                            color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#00ffcc",
-                            border: "1px solid #00ffcc",
+                            background: copiedPromptId === `m_${trackNum}` ? "#e82127" : "rgba(232, 33, 39, 0.15)",
+                            color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#e82127",
+                            border: "1px solid #e82127",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2282,7 +2373,7 @@ export default function Home() {
 
                     {/* Single Track Upload / Status Bar */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.3)", padding: "6px 10px", borderRadius: "6px" }}>
-                      <div style={{ fontSize: "11px", color: customTrack ? "#00ffcc" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ fontSize: "11px", color: customTrack ? "#e82127" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
                         {customTrack ? (
                           <>
                             <span>🟢 <strong>[업로드 완료]</strong> {customTrack.name}</span>
@@ -2348,9 +2439,9 @@ export default function Home() {
           </div>
 
           {/* SECTION 3.5: Dokkaebi 4K Thumbnail Engine (Full Hybrid Studio) */}
-          <div className="glass-panel" style={{ borderColor: "rgba(168, 85, 247, 0.4)", boxShadow: "0 0 20px rgba(168, 85, 247, 0.15)" }}>
+          <div className="glass-panel" style={{ borderColor: "rgba(232, 33, 39, 0.4)", boxShadow: "0 0 20px rgba(232, 33, 39, 0.15)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "#a855f7" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "#e82127" }}>
                 <span>🎨</span> Dokkaebi 4K 썸네일 엔진 (클릭률 1위 후킹 스튜디오)
                 <button
                   type="button"
@@ -2359,9 +2450,9 @@ export default function Home() {
                     padding: "6px 10px",
                     fontSize: "11px",
                     fontWeight: "700",
-                    background: showDokkaebiBadge ? "rgba(0, 255, 204, 0.15)" : "rgba(255, 77, 109, 0.15)",
-                    color: showDokkaebiBadge ? "#00ffcc" : "#ff4d6d",
-                    border: showDokkaebiBadge ? "1px solid #00ffcc" : "1px solid #ff4d6d",
+                    background: showDokkaebiBadge ? "rgba(232, 33, 39, 0.15)" : "rgba(255, 77, 109, 0.15)",
+                    color: showDokkaebiBadge ? "#e82127" : "#ff4d6d",
+                    border: showDokkaebiBadge ? "1px solid #e82127" : "1px solid #ff4d6d",
                     borderRadius: "6px",
                     cursor: "pointer",
                     whiteSpace: "nowrap"
@@ -2374,9 +2465,9 @@ export default function Home() {
             </div>
 
             {/* Cute Dokkaebi Mascot AI Image Prompt Generator Box */}
-            <div style={{ background: "rgba(168, 85, 247, 0.1)", border: "1px solid rgba(168, 85, 247, 0.3)", borderRadius: "8px", padding: "12px", marginBottom: "14px" }}>
+            <div style={{ background: "rgba(232, 33, 39, 0.1)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "8px", padding: "12px", marginBottom: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "800", color: "#a855f7" }}>
+                <span style={{ fontSize: "12px", fontWeight: "800", color: "#e82127" }}>
                   👹 [4K 시네마틱 썸네일 AI 이미지 프롬프트 - 한글 감성 연출 & 영문 복사]
                 </span>
                 <button
@@ -2389,9 +2480,9 @@ export default function Home() {
                     padding: "5px 12px",
                     fontSize: "11px",
                     fontWeight: "800",
-                    background: "rgba(0, 255, 204, 0.2)",
-                    color: "#00ffcc",
-                    border: "1px solid #00ffcc",
+                    background: "rgba(232, 33, 39, 0.2)",
+                    color: "#e82127",
+                    border: "1px solid #e82127",
                     borderRadius: "6px",
                     cursor: "pointer"
                   }}
@@ -2401,7 +2492,7 @@ export default function Home() {
               </div>
 
               {/* Korean Scene Explanation for Director */}
-              <div style={{ fontSize: "11px", color: "#00ffcc", marginBottom: "6px", fontWeight: "700" }}>
+              <div style={{ fontSize: "11px", color: "#e82127", marginBottom: "6px", fontWeight: "700" }}>
                 🇰🇷 [총감독님 전용 장면 설명]: {topTrendingTheme.title}
               </div>
 
@@ -2417,7 +2508,7 @@ export default function Home() {
                   lineHeight: "1.4",
                   fontFamily: "monospace",
                   background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(168, 85, 247, 0.4)",
+                  border: "1px solid rgba(232, 33, 39, 0.4)",
                   padding: "8px",
                   borderRadius: "6px",
                   resize: "vertical"
@@ -2438,9 +2529,9 @@ export default function Home() {
                   padding: "8px 12px",
                   fontSize: "12px",
                   fontWeight: "700",
-                  background: thumbnailMode === "auto" ? "rgba(0, 255, 204, 0.2)" : "rgba(0,0,0,0.4)",
-                  color: thumbnailMode === "auto" ? "#00ffcc" : "var(--text-secondary)",
-                  border: thumbnailMode === "auto" ? "1px solid #00ffcc" : "1px solid var(--glass-border)",
+                  background: thumbnailMode === "auto" ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: thumbnailMode === "auto" ? "#e82127" : "var(--text-secondary)",
+                  border: thumbnailMode === "auto" ? "1px solid #e82127" : "1px solid var(--glass-border)",
                   borderRadius: "6px",
                   cursor: "pointer"
                 }}
@@ -2476,9 +2567,9 @@ export default function Home() {
                   padding: "8px 12px",
                   fontSize: "12px",
                   fontWeight: "700",
-                  background: thumbnailMode === "ai" ? "rgba(168, 85, 247, 0.2)" : "rgba(0,0,0,0.4)",
-                  color: thumbnailMode === "ai" ? "#a855f7" : "var(--text-secondary)",
-                  border: thumbnailMode === "ai" ? "1px solid #a855f7" : "1px solid var(--glass-border)",
+                  background: thumbnailMode === "ai" ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: thumbnailMode === "ai" ? "#e82127" : "var(--text-secondary)",
+                  border: thumbnailMode === "ai" ? "1px solid #e82127" : "1px solid var(--glass-border)",
                   borderRadius: "6px",
                   cursor: "pointer"
                 }}
@@ -2496,9 +2587,9 @@ export default function Home() {
                   padding: "8px 12px",
                   fontSize: "12px",
                   fontWeight: "700",
-                  background: thumbnailMode === "upload" ? "rgba(255, 183, 3, 0.2)" : "rgba(0,0,0,0.4)",
-                  color: thumbnailMode === "upload" ? "#ffb703" : "var(--text-secondary)",
-                  border: thumbnailMode === "upload" ? "1px solid #ffb703" : "1px solid var(--glass-border)",
+                  background: thumbnailMode === "upload" ? "rgba(226, 232, 240, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: thumbnailMode === "upload" ? "#e2e8f0" : "var(--text-secondary)",
+                  border: thumbnailMode === "upload" ? "1px solid #e2e8f0" : "1px solid var(--glass-border)",
                   borderRadius: "6px",
                   cursor: "pointer"
                 }}
@@ -2527,7 +2618,7 @@ export default function Home() {
               aspectRatio: "16/9",
               borderRadius: "10px",
               overflow: "hidden",
-              border: "1.5px solid rgba(168, 85, 247, 0.5)",
+              border: "1.5px solid rgba(232, 33, 39, 0.5)",
               background: "#05030a",
               display: "flex",
               alignItems: "center",
@@ -2558,8 +2649,8 @@ export default function Home() {
                   height: "55px",
                   borderRadius: "50%",
                   overflow: "hidden",
-                  border: "2px solid #00ffcc",
-                  boxShadow: "0 0 12px rgba(168, 85, 247, 0.7), inset 0 0 8px rgba(0, 255, 204, 0.5)",
+                  border: "2px solid #e82127",
+                  boxShadow: "0 0 12px rgba(232, 33, 39, 0.7), inset 0 0 8px rgba(232, 33, 39, 0.5)",
                   background: "rgba(10, 6, 18, 0.95)",
                   zIndex: 4
                 }}>
@@ -2576,7 +2667,7 @@ export default function Home() {
                 position: "absolute",
                 bottom: "12px",
                 left: "12px",
-                background: "linear-gradient(90deg, #a855f7 0%, #00ffcc 100%)",
+                background: "linear-gradient(90deg, #e82127 0%, #e82127 100%)",
                 padding: "6px 14px",
                 borderRadius: "6px",
                 color: "#000",
@@ -2594,14 +2685,14 @@ export default function Home() {
                 bottom: "12px",
                 right: "12px",
                 background: "rgba(0, 0, 0, 0.85)",
-                border: "1.5px solid #ffb703",
+                border: "1.5px solid #e2e8f0",
                 padding: "5px 12px",
                 borderRadius: "6px",
-                color: "#ffb703",
+                color: "#e2e8f0",
                 fontSize: "12px",
                 fontWeight: "800",
                 letterSpacing: "0.5px",
-                boxShadow: "0 0 8px rgba(255, 183, 3, 0.4)",
+                boxShadow: "0 0 8px rgba(226, 232, 240, 0.4)",
                 zIndex: 4
               }}>
                 🧠 432Hz Solfeggio & Alpha Wave
@@ -2619,15 +2710,15 @@ export default function Home() {
                   gap: "10px",
                   zIndex: 10
                 }}>
-                  <div style={{ width: "32px", height: "32px", border: "3px solid #a855f7", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                  <span style={{ color: "#00ffcc", fontSize: "13px", fontWeight: "700" }}>🤖 Generating 4K Dokkaebi Thumbnail...</span>
+                  <div style={{ width: "32px", height: "32px", border: "3px solid #e82127", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  <span style={{ color: "#e82127", fontSize: "13px", fontWeight: "700" }}>🤖 Generating 4K Dokkaebi Thumbnail...</span>
                 </div>
               )}
             </div>
 
             {/* Permanent Global American Audience Directive Box */}
-            <div style={{ background: "rgba(0, 255, 204, 0.06)", border: "1px solid rgba(0, 255, 204, 0.3)", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: "#00ffcc" }}>
+            <div style={{ background: "rgba(232, 33, 39, 0.06)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "800", color: "#e82127" }}>
                 🌐 GLOBAL AMERICAN AUDIENCE DIRECTIVE (100% Native English System)
               </div>
               <div style={{ fontSize: "11px", color: "#aaa", lineHeight: "1.5" }}>
@@ -2639,14 +2730,14 @@ export default function Home() {
           </div>
 
           {/* SECTION C: Pre-Render Cinematic Options with Interactive Tooltips */}
-          <div className="glass-panel" style={{ borderLeft: "4px solid #ffb703" }}>
-            <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#ffb703", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="glass-panel" style={{ borderLeft: "4px solid #e2e8f0" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#e2e8f0", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
               <span>🎬</span> 렌더링 전 시네마틱 연출 & 이퀄라이저 선택기 (💡버튼 클릭시 1초 설명)
             </h2>
 
             {/* Interactive Tooltip Banner */}
             {activeTooltipKey && (
-              <div style={{ background: "rgba(255, 183, 3, 0.12)", border: "1px solid #ffb703", borderRadius: "8px", padding: "12px", marginBottom: "14px", color: "#ffb703", fontSize: "13px", lineHeight: "1.5" }}>
+              <div style={{ background: "rgba(226, 232, 240, 0.12)", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px", marginBottom: "14px", color: "#e2e8f0", fontSize: "13px", lineHeight: "1.5" }}>
                 {TOOLTIP_INFOS[activeTooltipKey]}
               </div>
             )}
@@ -2656,7 +2747,7 @@ export default function Home() {
               <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px", borderRadius: "8px", border: "1px solid var(--glass-border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>🎛️ 오디오 비트 이퀄라이저 스타일:</span>
-                  <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === "eqStyle" ? null : "eqStyle")} style={{ background: "transparent", border: "1px solid #ffb703", color: "#ffb703", borderRadius: "50%", width: "22px", height: "22px", fontSize: "11px", fontWeight: "800", cursor: "pointer" }}>💡</button>
+                  <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === "eqStyle" ? null : "eqStyle")} style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#e2e8f0", borderRadius: "50%", width: "22px", height: "22px", fontSize: "11px", fontWeight: "800", cursor: "pointer" }}>💡</button>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                   {[
@@ -2673,9 +2764,9 @@ export default function Home() {
                         padding: "8px",
                         fontSize: "12px",
                         fontWeight: "700",
-                        background: eqStyle === item.id ? "rgba(255, 183, 3, 0.2)" : "rgba(0,0,0,0.4)",
-                        color: eqStyle === item.id ? "#ffb703" : "var(--text-secondary)",
-                        border: eqStyle === item.id ? "1px solid #ffb703" : "1px solid var(--glass-border)",
+                        background: eqStyle === item.id ? "rgba(226, 232, 240, 0.2)" : "rgba(0,0,0,0.4)",
+                        color: eqStyle === item.id ? "#e2e8f0" : "var(--text-secondary)",
+                        border: eqStyle === item.id ? "1px solid #e2e8f0" : "1px solid var(--glass-border)",
                         borderRadius: "6px",
                         cursor: "pointer"
                       }}
@@ -2691,7 +2782,7 @@ export default function Home() {
                 <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px", borderRadius: "8px", border: "1px solid var(--glass-border)", marginTop: "12px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                     <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff" }}>🌈 오디오 비트 이퀄라이저 테마 색상:</span>
-                    <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === "eqColor" ? null : "eqColor")} style={{ background: "transparent", border: "1px solid #ffb703", color: "#ffb703", borderRadius: "50%", width: "22px", height: "22px", fontSize: "11px", fontWeight: "800", cursor: "pointer" }}>💡</button>
+                    <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === "eqColor" ? null : "eqColor")} style={{ background: "transparent", border: "1px solid #e2e8f0", color: "#e2e8f0", borderRadius: "50%", width: "22px", height: "22px", fontSize: "11px", fontWeight: "800", cursor: "pointer" }}>💡</button>
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
                     {[
@@ -2709,9 +2800,9 @@ export default function Home() {
                           fontSize: "11px",
                           fontWeight: "700",
                           borderRadius: "6px",
-                          border: eqColor === col.id ? "1px solid #b432ff" : "1px solid rgba(255,255,255,0.15)",
-                          background: eqColor === col.id ? "rgba(180,50,255,0.2)" : "rgba(0,0,0,0.4)",
-                          color: eqColor === col.id ? "#b432ff" : "#aaa",
+                          border: eqColor === col.id ? "1px solid #e82127" : "1px solid rgba(255,255,255,0.15)",
+                          background: eqColor === col.id ? "rgba(232, 33, 39,0.2)" : "rgba(0,0,0,0.4)",
+                          color: eqColor === col.id ? "#e82127" : "#aaa",
                           cursor: "pointer"
                         }}
                       >
@@ -2734,11 +2825,11 @@ export default function Home() {
                   { key: "neonDokkaebi", state: enableNeonDokkaebi, setter: setEnableNeonDokkaebi, label: "👹 오디오 반응형 네온 도깨비 스티커" }
                 ].map(opt => (
                   <div key={opt.key} style={{ background: "rgba(0,0,0,0.3)", padding: "10px", borderRadius: "8px", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: opt.state ? "#00ffcc" : "#aaa", cursor: "pointer" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: opt.state ? "#e82127" : "#aaa", cursor: "pointer" }}>
                       <input type="checkbox" checked={opt.state} onChange={(e) => opt.setter(e.target.checked)} />
                       <span>{opt.label}</span>
                     </label>
-                    <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === opt.key ? null : opt.key)} style={{ background: "transparent", border: "none", color: "#ffb703", cursor: "pointer", fontSize: "12px" }}>💡</button>
+                    <button type="button" onClick={() => setActiveTooltipKey(activeTooltipKey === opt.key ? null : opt.key)} style={{ background: "transparent", border: "none", color: "#e2e8f0", cursor: "pointer", fontSize: "12px" }}>💡</button>
                   </div>
                 ))}
               </div>
@@ -2779,9 +2870,9 @@ export default function Home() {
                     padding: "4px 10px",
                     fontSize: "11px",
                     fontWeight: "800",
-                    background: "rgba(0, 255, 204, 0.2)",
-                    color: "#00ffcc",
-                    border: "1px solid #00ffcc",
+                    background: "rgba(232, 33, 39, 0.2)",
+                    color: "#e82127",
+                    border: "1px solid #e82127",
                     borderRadius: "6px",
                     cursor: "pointer"
                   }}
@@ -2808,12 +2899,12 @@ export default function Home() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12px", color: "#a855f7", marginBottom: "4px", fontWeight: "700" }}>📌 첫 번째 도깨비 영문 고정 댓글 (Pinned Comment):</label>
+                <label style={{ display: "block", fontSize: "12px", color: "#e82127", marginBottom: "4px", fontWeight: "700" }}>📌 첫 번째 도깨비 영문 고정 댓글 (Pinned Comment):</label>
                 <input 
                   type="text" 
                   value={pinnedComment} 
                   onChange={(e) => setPinnedComment(e.target.value)}
-                  style={{ width: "100%", color: "#a855f7", border: "1px solid rgba(168, 85, 247, 0.4)", background: "#05030a", padding: "8px", borderRadius: "6px", fontSize: "12px" }}
+                  style={{ width: "100%", color: "#e82127", border: "1px solid rgba(232, 33, 39, 0.4)", background: "#05030a", padding: "8px", borderRadius: "6px", fontSize: "12px" }}
                 />
               </div>
 
@@ -2834,8 +2925,44 @@ export default function Home() {
         {/* Right Column: Console & Output */}
         <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
 
+          {/* 구글 캐글(Kaggle) 렌더링 주엔진 가동 센터 */}
+          <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "12px", border: "1px solid var(--glass-border)", background: "var(--bg-secondary)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "var(--text-primary)", letterSpacing: "1px" }}>
+                <span>☁️</span> KAGGLE CLOUD ENGINE
+              </h2>
+              <span className="badge badge-success" style={{ fontSize: "10px" }}>주당 30시간 무료 GPU</span>
+            </div>
+            
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+              내 PC 리소스를 사용하지 않고 구글 캐글 GPU로 AI 비디오를 안전하게 생성합니다. 
+              세션이 끊기기 전에 다운로드 혹은 구글 드라이브로 파일을 이송해 보관하세요.
+            </p>
+
+            <button 
+              type="button"
+              className="btn-secondary" 
+              onClick={() => setShowKaggleGuide(true)}
+              style={{
+                padding: "12px",
+                fontSize: "13px",
+                fontWeight: "700",
+                width: "100%",
+                justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(232, 33, 39, 0.1)",
+                color: "var(--accent-red)",
+                border: "1px solid rgba(232, 33, 39, 0.2)"
+              }}
+            >
+              🌋 캐글 5초 가입 및 세팅 가이드 열기
+            </button>
+          </div>
+
           {/* Render Action Control Panel (Moved to Right Column directly above console) */}
-          <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "12px", border: "1px solid var(--accent-cyan)", boxShadow: "0 0 20px rgba(0, 255, 204, 0.15)" }}>
+          <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "12px", border: "1px solid var(--glass-border)", boxShadow: "0 0 20px rgba(232, 33, 39, 0.15)" }}>
             <h2 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
               🚀 3단계: 비디오 렌더링 & 숏츠 일괄 생성 제어 센터
             </h2>
@@ -2870,10 +2997,10 @@ export default function Home() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "linear-gradient(90deg, #ff007f 0%, #00ffcc 100%)",
-                border: "1px solid #00ffcc",
+                background: "linear-gradient(90deg, #ff007f 0%, #e82127 100%)",
+                border: "1px solid #e82127",
                 color: "#000",
-                boxShadow: "0 0 20px rgba(0, 255, 204, 0.5)",
+                boxShadow: "0 0 20px rgba(232, 33, 39, 0.5)",
                 cursor: "pointer"
               }}
             >
@@ -2899,7 +3026,7 @@ export default function Home() {
               padding: "12px",
               fontFamily: "var(--font-mono)",
               fontSize: "12px",
-              color: "#00ffcc",
+              color: "#e82127",
               overflowY: "auto",
               whiteSpace: "pre-wrap",
               marginBottom: "12px"
@@ -2935,15 +3062,15 @@ export default function Home() {
 
             {/* Friendly Step-by-Step Connection Guide Box */}
             <div style={{
-              background: "rgba(168, 85, 247, 0.08)",
-              border: "1px solid rgba(168, 85, 247, 0.3)",
+              background: "rgba(232, 33, 39, 0.08)",
+              border: "1px solid rgba(232, 33, 39, 0.3)",
               borderRadius: "8px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "12px",
               color: "#e2e8f0"
             }}>
-              <div style={{ fontWeight: "800", color: "#a855f7", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ fontWeight: "800", color: "#e82127", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
                 <span>📖 3초 만에 끝나는 초간단 유튜브 채널 연동 3단계</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
@@ -3060,8 +3187,8 @@ export default function Home() {
             return (
               <div style={{
                 background: "#0d0914",
-                border: "2px solid #a855f7",
-                boxShadow: "0 0 30px rgba(168, 85, 247, 0.6)",
+                border: "2px solid #e82127",
+                boxShadow: "0 0 30px rgba(232, 33, 39, 0.6)",
                 borderRadius: "16px",
                 width: "100%",
                 maxWidth: "650px",
@@ -3071,8 +3198,8 @@ export default function Home() {
                 gap: "16px",
                 color: "#ffffff"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(168, 85, 247, 0.3)", pb: "12px" }}>
-                  <span style={{ fontSize: "16px", fontWeight: "900", color: "#00ffcc", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(232, 33, 39, 0.3)", pb: "12px" }}>
+                  <span style={{ fontSize: "16px", fontWeight: "900", color: "#e82127", display: "flex", alignItems: "center", gap: "8px" }}>
                     🔍 [한글 연출 확인 및 수정] - {sampleTrack.titleKo}
                   </span>
                   <button
@@ -3089,7 +3216,7 @@ export default function Home() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ fontSize: "13px", fontWeight: "800", color: "#a855f7" }}>
+                  <label style={{ fontSize: "13px", fontWeight: "800", color: "#e82127" }}>
                     ✍️ 한글 연출 텍스트 (자유롭게 수정 가능):
                   </label>
                   <textarea
@@ -3104,7 +3231,7 @@ export default function Home() {
                       padding: "12px",
                       borderRadius: "8px",
                       background: "rgba(0,0,0,0.6)",
-                      border: "1px solid rgba(0, 255, 204, 0.4)",
+                      border: "1px solid rgba(232, 33, 39, 0.4)",
                       color: "#ffffff",
                       fontSize: "13px",
                       lineHeight: "1.5",
@@ -3149,13 +3276,13 @@ export default function Home() {
                     style={{
                       padding: "8px 24px",
                       borderRadius: "6px",
-                      background: "linear-gradient(135deg, #a855f7 0%, #00ffcc 100%)",
+                      background: "linear-gradient(135deg, #e82127 0%, #e82127 100%)",
                       color: "#000000",
                       border: "none",
                       cursor: "pointer",
                       fontSize: "13px",
                       fontWeight: "900",
-                      boxShadow: "0 0 15px rgba(168, 85, 247, 0.6)"
+                      boxShadow: "0 0 15px rgba(232, 33, 39, 0.6)"
                     }}
                   >
                     ✅ [확정]
@@ -3164,6 +3291,128 @@ export default function Home() {
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* 💻 Kaggle 5-Second Sign-Up & Setup Guide Modal */}
+      {showKaggleGuide && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.85)",
+          backdropFilter: "blur(8px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: "20px"
+        }}>
+          <div className="glass-panel" style={{
+            width: "100%",
+            maxWidth: "600px",
+            background: "#121212",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "12px",
+            padding: "36px",
+            boxShadow: "0 25px 60px rgba(0, 0, 0, 0.8)",
+            position: "relative"
+          }}>
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowKaggleGuide(false)}
+              style={{
+                position: "absolute",
+                top: "20px",
+                right: "20px",
+                background: "transparent",
+                border: "none",
+                color: "var(--text-secondary)",
+                fontSize: "20px",
+                cursor: "pointer"
+              }}
+            >
+              ✕
+            </button>
+
+            <h2 style={{ fontSize: "22px", fontWeight: "800", letterSpacing: "2px", color: "#ffffff", marginBottom: "8px", textTransform: "uppercase" }}>
+              구글 캐글(Kaggle) 5초 가이드 ☁️
+            </h2>
+            <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "28px" }}>
+              내 컴퓨터의 리소스를 전혀 소모하지 않고, 구글 클라우드에서 AI 이미지를 렌더링하세요!
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "18px", textAlign: "left", fontSize: "14px", color: "#e2e8f0" }}>
+              {/* Step 1 */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>1</span>
+                <div>
+                  <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>캐글 회원가입 (5초 소요)</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>
+                    구글 계정으로 즉시 무료 가입할 수 있습니다.
+                  </div>
+                  <a 
+                    href="https://www.kaggle.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn-secondary" 
+                    style={{ padding: "6px 14px", fontSize: "11px", display: "inline-block", textDecoration: "none", textAlign: "center" }}
+                  >
+                    🔗 구글 캐글 사이트 이동
+                  </a>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>2</span>
+                <div>
+                  <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>무료 GPU(주당 30시간) 활성화</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    Kaggle 로그인 후 <b>Settings ➔ Phone Verification</b>을 완료하면 고성능 T4/P100 클라우드 GPU 자원이 즉시 100% 무료 개방됩니다!
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>3</span>
+                <div>
+                  <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>노트북 복제 & 구동</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>
+                    유튜브 영상 설명란의 한국어 캐글 공유 링크를 열어 <b>Copy & Edit</b> 버튼을 누른 뒤, 순서대로 재생 단추를 눌러 구동하세요.
+                  </div>
+                  <a 
+                    href="https://youtu.be/5DQLYQg1iLU" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn-secondary" 
+                    style={{ padding: "6px 14px", fontSize: "11px", display: "inline-block", textDecoration: "none", textAlign: "center" }}
+                  >
+                    📺 유튜브 안내 영상 보기
+                  </a>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>4</span>
+                <div>
+                  <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>완성물 다운로드 & 스튜디오 보관</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    렌더링이 완료된 8초 비디오 및 이미지는 즉시 다운로드하거나 구글 드라이브로 복사하여 안전하게 보관하세요.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowKaggleGuide(false)}
+              className="btn-primary" 
+              style={{ width: "100%", padding: "14px", marginTop: "28px" }}
+            >
+              가이드 확인 완료 (닫기)
+            </button>
+          </div>
         </div>
       )}
     </div>
