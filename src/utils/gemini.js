@@ -219,8 +219,7 @@ Breathe deep, and let go. As long as you remain here, you are under the Dokkaebi
   }
 
   getMockMetadata(genre, theme, trackCount, durationHours) {
-    const cleanTheme = theme.replace(/[^\w\s가-힣]/g, "").trim() || "Seoul Lofi";
-    const defaultTitles = Array.from({ length: trackCount }, (_, i) => `Track ${String(i + 1).padStart(2, "0")}: Whispering ${cleanTheme} Melodies Pt.${i + 1}`);
+    const defaultTitles = Array.from({ length: trackCount }, (_, i) => `Track ${String(i + 1).padStart(2, "0")}: Whispering Korean Lofi Melodies Pt.${i + 1}`);
     const timestampsText = defaultTitles.map((t, idx) => {
       const totalMinutes = idx * 3;
       const mm = String(totalMinutes % 60).padStart(2, "0");

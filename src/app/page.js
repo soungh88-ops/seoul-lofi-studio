@@ -943,11 +943,16 @@ export default function Home() {
         fullDesc += "--------------------------------------------------\n\n";
         fullDesc += "📌 [Tracklist Chapters]\n";
 
-        const trackTitlesList = (musicPrompts && musicPrompts.length > 0)
-          ? musicPrompts.map(p => p.title)
-          : (data.metadata && Array.isArray(data.metadata.trackTitles) && data.metadata.trackTitles.length > 0)
-            ? data.metadata.trackTitles
-            : Array.from({ length: 20 }, (_, i) => `트랙 ${String(i + 1).padStart(2, "0")}: ${topTrendingTheme.title} Pt.${i + 1}`);
+        const rawTrackList = (data.metadata && Array.isArray(data.metadata.trackTitles) && data.metadata.trackTitles.length > 0)
+          ? data.metadata.trackTitles
+          : sample20Tracks.map(t => t.titleEn);
+
+        const trackTitlesList = rawTrackList.map((tTitle, i) => {
+          if (/[가-힣]/.test(tTitle)) {
+            return sample20Tracks[i % sample20Tracks.length]?.titleEn || `Track ${String(i + 1).padStart(2, "0")}: Whispering Korean Lofi Melodies Pt.${i + 1}`;
+          }
+          return tTitle;
+        });
 
         trackTitlesList.slice(0, 20).forEach((tTitle, i) => {
           const totalSeconds = i * (trackDurationMinutes * 60);
@@ -1543,6 +1548,7 @@ export default function Home() {
                           }
                           setCustomKoreanPrompt(richKoPrompt);
                           handleSyncKoreanToEnglishPrompt(richKoPrompt);
+                          fetchAiMusicPrompts(item.title);
                           setShowMonthCalendar(false);
                         }}
                         style={{
@@ -2328,11 +2334,14 @@ export default function Home() {
                 const trackNum = idx + 1;
                 const trackNoStr = String(trackNum).padStart(2, "0");
                 const sampleTrack = track;
-                const promptData = musicPrompts.find(p => p.trackNumber === trackNum);
+                const promptData = musicPrompts.find(p => p.trackNumber === trackNum || p.id === trackNum);
                 const customTrack = customAudioTracks[trackNum];
                 const hasValidTrack = !!(customTrack && customTrack.data && customTrack.data.length > 0);
-                const trackAudioUrl = hasValidTrack ? customTrack.data : null;
                 const isCurrentPlaying = activeTrackIndex === idx;
+
+                const displayTitleKo = promptData?.title || promptData?.titleKo || sampleTrack.titleKo;
+                const displayTitleEn = promptData?.titleEn || sampleTrack.titleEn;
+                const displayPromptKo = editedTrackKoPrompts[trackNum] || promptData?.promptKo || sampleTrack.defaultPromptKo?.replace(/□□/g, "특별") || `${topTrendingTheme.title} 분위기의 힐링 국악 로파이 음원`;
 
                 return (
                   <div 
@@ -2344,170 +2353,161 @@ export default function Home() {
                       border: hasValidTrack ? "1px solid #a1a1aa" : isCurrentPlaying ? "1px solid #a1a1aa" : "1px solid rgba(255, 255, 255, 0.1)",
                       display: "flex", 
                       flexDirection: "column", 
-                      gap: "6px" 
+                      gap: "8px" 
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span 
-                          className={`badge ${hasValidTrack ? "badge-success" : "badge-pending"}`} 
-                          style={{ 
-                            fontSize: "11px", 
-                            fontWeight: "800",
-                            background: hasValidTrack ? "#a1a1aa" : "rgba(255, 255, 255, 0.1)",
-                            color: hasValidTrack ? "#000000" : "#94a3b8"
-                          }}
-                        >
-                          {hasValidTrack ? `🟢 트랙 ${trackNoStr} 꽂힘` : `⚪ 트랙 ${trackNoStr} 비어있음`}
-                        </span>
-                        <span style={{ fontSize: "12px", fontWeight: "800", color: isCurrentPlaying ? "#a1a1aa" : "#e2e8f0" }}>
-                          {sampleTrack.titleKo}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!customTrack) {
-                              alert(`⚠️ [트랙 ${trackNoStr}] 에 첨부된 음원 파일이 없습니다!\n상단 드래그 앤 드롭 또는 [📂 파일 꽂기]로 해당 음원 파일을 먼저 꽂아주세요.`);
-                              return;
-                            }
-                            if (isCurrentPlaying && audioPlayerRef.current && !audioPlayerRef.current.paused) {
-                              audioPlayerRef.current.pause();
-                              setActiveTrackIndex(null);
-                            } else {
-                              setActiveTrackIndex(idx);
-                              if (audioPlayerRef.current) {
-                                audioPlayerRef.current.src = customTrack.data;
-                                audioPlayerRef.current.volume = masterVolume;
-                                audioPlayerRef.current.play();
-                              }
-                            }
-                          }}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            background: isCurrentPlaying ? "#ff4d6d" : "rgba(161, 161, 170, 0.15)",
-                            color: isCurrentPlaying ? "#fff" : "#a1a1aa",
-                            border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #a1a1aa",
-                            borderRadius: "4px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          {isCurrentPlaying ? "⏸️ 정지하기" : "▶️ 들어보기"}
-                        </button>
-
-                        {/* 🔍 한글 연출 확인 버튼 (클릭 시 팝업 오버레이) */}
-                        <button
-                          type="button"
-                          onClick={() => setActiveTrackModalIndex(idx)}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "11px",
-                            fontWeight: "800",
-                            background: "rgba(161, 161, 170, 0.2)",
-                            color: "#a1a1aa",
-                            border: "1px solid #a1a1aa",
-                            borderRadius: "4px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          🔍 한글 연출 확인
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cleanTitleSlug = sampleTrack.titleEn
-                              .replace(/^Track\s*\d+\s*:\s*/i, "")
-                              .replace(/[^\w\s]/g, "")
-                              .trim()
-                              .replace(/\s+/g, "_");
-                            const fixedNounTitle = `Track${trackNoStr}_${cleanTitleSlug}`;
-                            const bpmArr = [78, 76, 75, 74, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 58];
-                            const currentBpm = bpmArr[idx % 20];
-                            const fullPromptToCopy = `${fixedNounTitle}, 3-minute full length composition (180s duration), 70% Western Lo-Fi Chillhop + 30% Korean Instrument Fusion, ${currentBpm} BPM, 432Hz Solfeggio, Warm Reverb`;
-                            handleCopyPrompt(fullPromptToCopy, `m_${trackNum}`);
-                            alert(`📋 [${fixedNounTitle}] 고유 명사구 3분 프롬프트가 복사되었습니다!`);
-                          }}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            background: copiedPromptId === `m_${trackNum}` ? "#a1a1aa" : "rgba(161, 161, 170, 0.15)",
-                            color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#a1a1aa",
-                            border: "1px solid #a1a1aa",
-                            borderRadius: "4px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          {copiedPromptId === `m_${trackNum}` ? "✓ 복사완료!" : `📋 트랙 ${trackNoStr} 프롬프트 복사`}
-                        </button>
-                      </div>
+                    {/* 1행: 상태 뱃지 + 제미나이 20곡 다채로운 한글/영문 제목 */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      <span 
+                        className={`badge ${hasValidTrack ? "badge-success" : "badge-pending"}`} 
+                        style={{ 
+                          fontSize: "11px", 
+                          fontWeight: "800",
+                          background: hasValidTrack ? "#a1a1aa" : "rgba(255, 255, 255, 0.1)",
+                          color: hasValidTrack ? "#000000" : "#94a3b8",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {hasValidTrack ? `🟢 트랙 ${trackNoStr} 꽂힘` : `⚪ 트랙 ${trackNoStr} 비어있음`}
+                      </span>
+                      <span style={{ fontSize: "13px", fontWeight: "800", color: isCurrentPlaying ? "#a1a1aa" : "#ffffff", wordBreak: "break-all" }}>
+                        {displayTitleKo}
+                      </span>
                     </div>
 
-                    {/* Single Track Upload / Status Bar */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.3)", padding: "6px 10px", borderRadius: "6px" }}>
-                      <div style={{ fontSize: "11px", color: customTrack ? "#a1a1aa" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
-                        {customTrack ? (
-                          <>
-                            <span>🟢 <strong>[업로드 완료]</strong> {customTrack.name}</span>
-                          </>
-                        ) : (
-                          <span>⚪ <strong>[비어 있음]</strong> (첨부 안 하면 AI 자동 음원으로 렌더링)</span>
-                        )}
-                      </div>
-
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <label style={{
-                          padding: "3px 8px",
+                    {/* 2행: 100% 1줄 칼규격 액션 버튼들 (세로 찌그러짐 원천 차단) */}
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!customTrack) {
+                            alert(`⚠️ [트랙 ${trackNoStr}] 에 첨부된 음원 파일이 없습니다!\n하단 [📂 파일 꽂기] 버튼으로 해당 음원 파일을 먼저 꽂아주세요.`);
+                            return;
+                          }
+                          if (isCurrentPlaying && audioPlayerRef.current && !audioPlayerRef.current.paused) {
+                            audioPlayerRef.current.pause();
+                            setActiveTrackIndex(null);
+                          } else {
+                            setActiveTrackIndex(idx);
+                            if (audioPlayerRef.current) {
+                              audioPlayerRef.current.src = customTrack.data;
+                              audioPlayerRef.current.volume = masterVolume;
+                              audioPlayerRef.current.play();
+                            }
+                          }
+                        }}
+                        style={{
+                          padding: "4px 8px",
                           fontSize: "11px",
-                          fontWeight: "700",
-                          background: "rgba(255,255,255,0.08)",
-                          color: "#fff",
-                          border: "1px solid var(--glass-border)",
+                          fontWeight: "800",
+                          background: isCurrentPlaying ? "#ff4d6d" : "rgba(161, 161, 170, 0.15)",
+                          color: isCurrentPlaying ? "#fff" : "#a1a1aa",
+                          border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #a1a1aa",
                           borderRadius: "4px",
-                          cursor: "pointer"
-                        }}>
-                          📂 파일 꽂기
-                          <input 
-                            type="file" 
-                            accept="audio/*" 
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleSingleTrackUpload(trackNum, e.target.files[0]);
-                              }
-                            }}
-                          />
-                        </label>
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {isCurrentPlaying ? "⏸️ 정지하기" : "▶️ 들어보기"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTrackModalIndex(idx)}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          fontWeight: "800",
+                          background: "rgba(161, 161, 170, 0.2)",
+                          color: "#a1a1aa",
+                          border: "1px solid #a1a1aa",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        🔍 한글 연출 확인
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cleanTitleSlug = (displayTitleEn || `Track_${trackNoStr}`)
+                            .replace(/^Track\s*\d+\s*:\s*/i, "")
+                            .replace(/[^\w\s]/g, "")
+                            .trim()
+                            .replace(/\s+/g, "_");
+                          const fixedNounTitle = `Track${trackNoStr}_${cleanTitleSlug}`;
+                          const bpmArr = [78, 76, 75, 74, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 58];
+                          const currentBpm = bpmArr[idx % 20];
+                          const fullPromptToCopy = `${fixedNounTitle}, 3-minute full length composition (180s duration), 70% Western Lo-Fi Chillhop + 30% Korean Instrument Fusion, ${currentBpm} BPM, 432Hz Solfeggio, Warm Reverb`;
+                          handleCopyPrompt(fullPromptToCopy, `m_${trackNum}`);
+                          alert(`📋 [${fixedNounTitle}] 고유 명사구 3분 프롬프트가 복사되었습니다!`);
+                        }}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          fontWeight: "800",
+                          background: copiedPromptId === `m_${trackNum}` ? "#a1a1aa" : "rgba(161, 161, 170, 0.15)",
+                          color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#a1a1aa",
+                          border: "1px solid #a1a1aa",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {copiedPromptId === `m_${trackNum}` ? "✓ 복사완료!" : `📋 트랙 ${trackNoStr} 프롬프트 복사`}
+                      </button>
+
+                      <label style={{
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        fontWeight: "800",
+                        background: "rgba(255,255,255,0.08)",
+                        color: "#fff",
+                        border: "1px solid var(--glass-border)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}>
+                        📂 파일 꽂기
+                        <input 
+                          type="file" 
+                          accept="audio/*" 
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleSingleTrackUpload(trackNum, e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {hasValidTrack && (
                         <button
                           type="button"
                           onClick={() => handleRemoveTrack(trackNum)}
-                          disabled={!hasValidTrack}
                           style={{
-                            padding: "3px 8px",
+                            padding: "4px 8px",
                             fontSize: "11px",
-                            fontWeight: "700",
-                            background: hasValidTrack ? "rgba(255, 77, 109, 0.3)" : "rgba(255, 255, 255, 0.05)",
-                            color: hasValidTrack ? "#ff4d6d" : "#64748b",
-                            border: hasValidTrack ? "1px solid #ff4d6d" : "1px solid rgba(255, 255, 255, 0.1)",
+                            fontWeight: "800",
+                            background: "rgba(255, 77, 109, 0.3)",
+                            color: "#ff4d6d",
+                            border: "1px solid #ff4d6d",
                             borderRadius: "4px",
-                            cursor: hasValidTrack ? "pointer" : "not-allowed",
-                            opacity: hasValidTrack ? 1 : 0.4
+                            cursor: "pointer",
+                            whiteSpace: "nowrap"
                           }}
                         >
-                          🗑️ 음원 삭제
+                          🗑️ 삭제
                         </button>
-                      </div>
+                      )}
                     </div>
 
-                    {promptData && (
-                      <div style={{ fontSize: "11px", color: "#bbb", lineHeight: "1.3", marginTop: "2px" }}>
-                        {promptData.promptKo || promptData.promptEn}
-                      </div>
-                    )}
+                    {/* 3행: 제미나이가 기획한 한글 연출 자막 (깨진 특수문자 제거) */}
+                    <div style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: "1.4", background: "rgba(0,0,0,0.2)", padding: "6px 8px", borderRadius: "4px" }}>
+                      💬 {displayPromptKo}
+                    </div>
                   </div>
                 );
               })}
