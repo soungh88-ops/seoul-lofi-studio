@@ -1,25 +1,24 @@
-/* Tesla Minimalist & High-Performance Design System */
+/* Monochrome Titanium & Charcoal Silver Design System */
 
 :root {
   /* Colors */
-  --bg-primary: #0a0a0a;       /* Deep Matte Black */
-  --bg-secondary: #121212;     /* Carbon Charcoal */
-  --bg-tertiary: #1a1a1a;      /* Medium Dark Gray */
+  --bg-primary: #09090b;       /* Pure Matte Charcoal Black */
+  --bg-secondary: #18181b;     /* Deep Titanium Gray */
+  --bg-tertiary: #27272a;      /* Medium Slate Charcoal */
   
-  --text-primary: #f5f5f7;     /* Chalk White */
-  --text-secondary: #a1a1a6;   /* Satin Silver */
-  --text-muted: #6e6e73;       /* Slate Muted */
+  --text-primary: #f4f4f5;     /* Pure Chalk White */
+  --text-secondary: #a1a1aa;   /* Cool Silver Gray */
+  --text-muted: #71717a;       /* Slate Muted */
   
-  --accent-red: #e82127;       /* Tesla Signature Red */
-  --accent-silver: #f5f5f7;
-  --accent-gray: #393c41;      /* Titanium Gray */
+  --accent-silver: #e4e4e7;    /* Brushed Titanium Silver */
+  --accent-dark: #3f3f46;      /* Dark Titanium Gray */
   --accent-green: #10b981;     /* Success Green */
   
-  --glow-red: rgba(232, 33, 39, 0.3);
+  --glow-subtle: rgba(255, 255, 255, 0.05);
   
-  --glass-bg: rgba(18, 18, 18, 0.8);
+  --glass-bg: rgba(24, 24, 27, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(232, 33, 39, 0.25);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
   
   --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -56,10 +55,10 @@ html, body {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-red);
+  background: var(--text-secondary);
 }
 
-/* Tesla Panels */
+/* Glass Panels (Monochrome style) */
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -73,26 +72,26 @@ html, body {
 
 .glass-panel:hover {
   border-color: var(--glass-border-hover);
-  box-shadow: 0 10px 30px rgba(232, 33, 39, 0.05);
+  box-shadow: 0 10px 35px rgba(255, 255, 255, 0.02);
 }
 
 /* Typography */
 .text-glow-red {
-  text-shadow: 0 0 12px var(--glow-red);
+  text-shadow: none; /* Removed hot red glows */
 }
 
 .gradient-text {
-  background: linear-gradient(180deg, #ffffff 0%, #a1a1a6 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #d4d4d8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Forms & Inputs (Tesla Style) */
+/* Forms & Inputs */
 input[type="text"], select, textarea {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(26, 26, 26, 0.8);
+  background: rgba(39, 39, 42, 0.6);
   border: 1px solid var(--glass-border);
   border-radius: 6px;
   color: var(--text-primary);
@@ -103,17 +102,17 @@ input[type="text"], select, textarea {
 }
 
 input[type="text"]:focus, select:focus, textarea:focus {
-  border-color: var(--accent-red);
-  background: #1c1c1e;
+  border-color: var(--text-secondary);
+  background: #202023;
 }
 
-/* Tesla Flat Capsule Buttons */
+/* Premium Monochrome Flat Buttons */
 .btn-primary {
-  background: var(--accent-red);
-  color: #ffffff;
+  background: var(--text-primary);
+  color: var(--bg-primary);
   border: none;
   padding: 12px 28px;
-  border-radius: 30px; /* Capsule */
+  border-radius: 30px; /* Elegant Capsule */
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -127,7 +126,7 @@ input[type="text"]:focus, select:focus, textarea:focus {
 }
 
 .btn-primary:hover {
-  background: #ff2b33;
+  background: #ffffff;
   transform: translateY(-1px);
 }
 
@@ -136,18 +135,18 @@ input[type="text"]:focus, select:focus, textarea:focus {
 }
 
 .btn-primary:disabled {
-  background: #3a3a3c;
-  color: #8e8e93;
+  background: #27272a;
+  color: #71717a;
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-secondary {
-  background: var(--accent-gray);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
-  border: none;
+  border: 1px solid var(--glass-border);
   padding: 12px 28px;
-  border-radius: 30px; /* Capsule */
+  border-radius: 30px;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -157,7 +156,8 @@ input[type="text"]:focus, select:focus, textarea:focus {
 }
 
 .btn-secondary:hover {
-  background: #48484a;
+  background: #3f3f46;
+  border-color: var(--text-secondary);
   transform: translateY(-1px);
 }
 
@@ -177,7 +177,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--accent-red);
+  background: var(--text-primary);
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -205,18 +205,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .badge-pending {
-  background: rgba(245, 245, 247, 0.05);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .badge-error {
-  background: rgba(232, 33, 39, 0.1);
-  color: var(--accent-red);
-  border: 1px solid rgba(232, 33, 39, 0.2);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
-/* Audio Wave Visualizer Animation */
+/* Audio Wave Visualizer (Calm White Monochrome) */
 .visualizer-container {
   display: flex;
   align-items: flex-end;
@@ -227,7 +227,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .visualizer-bar {
   width: 3px;
-  background: var(--accent-red);
+  background: var(--text-secondary);
   border-radius: 1px;
   transition: height 0.08s ease;
 }

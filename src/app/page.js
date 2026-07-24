@@ -233,7 +233,7 @@ export default function Home() {
 
   const [showHookingTitle, setShowHookingTitle] = useState(false);
   const [hookingTitleText, setHookingTitleText] = useState("");
-  const [hookingTextColor, setHookingTextColor] = useState("#e82127");
+  const [hookingTextColor, setHookingTextColor] = useState("#a1a1aa");
   const [hookingFontSize, setHookingFontSize] = useState(24);
 
   const [mascotKoDesc, setMascotKoDesc] = useState("사이버 네온 한복 아머와 LED 마스크, LOFI 이퀄라이저 팔토시 및 네온 방망이를 들고 삼면(전면/측면/후면) 콘셉트 아트를 장착한 공식 DOKKAEBI KOREA LOFI 도깨비 캐릭터");
@@ -264,15 +264,19 @@ export default function Home() {
 
   const sample20Tracks = Array.from({ length: 20 }, (_, i) => {
     const trackNo = String(i + 1).padStart(2, "0");
+    const baseThemeTitle = topTrendingTheme.title || "국악 로파이";
+    const instName = topTrendingTheme.targetInstruments ? topTrendingTheme.targetInstruments.split("&")[0].trim() : "가야금";
+    const waveName = topTrendingTheme.brainwave ? topTrendingTheme.brainwave.split("+")[0].trim() : "432Hz 힐링 주파수";
+
     const sampleThemes = [
-      { titleKo: "달빛 아래 가야금 서곡", titleEn: "Moonlight Gayageum Prelude", instKo: "가야금 & 밤 빗소리", promptKo: "달빛이 비치는 한옥 뜰에서 가야금과 은은한 밤 빗소리가 아늑하게 어우러지는 수면 힐링 432Hz 국악 로파이" },
-      { titleKo: "편백나무 향의 해금 힐링 선율", titleEn: "Healing Hinoki Cypress Haegeum Melody", instKo: "해금 & 피아노", promptKo: "편백나무 찜질방 휴게실에서 들려오는 따뜻하고 아늑한 해금 첼로 듀엣 수면 공부 로파이 3분 곡" },
-      { titleKo: "자정 대금의 솔페지오 수면 음률", titleEn: "Midnight Solfeggio Daegeum Sleep Wave", instKo: "대금 & 숲속 모닥불", promptKo: "자정 숲속 깊은 한옥 정자에서 피어오르는 대금 솔페지오 불멍 수면 힐링 432Hz 로파이" },
-      { titleKo: "새벽 거문고 빗소리 수면 힐링", titleEn: "Midnight Rain Geomungo Sleep Lofi", instKo: "거문고 & 잔잔한 빗소리", promptKo: "빗방울 떨어지는 고즈넉한 서울 삼청동 한옥 뜰 거문고 수면 힐링 432Hz 로파이" },
-      { titleKo: "조선 신비로운 도깨비 숲 수면 오르골", titleEn: "Mystic Dokkaebi Forest Sleep Box", instKo: "태평소 & 오르골", promptKo: "신비로운 도깨비 숲속 밤하늘 아래 조용히 퍼지는 432Hz 수면 오르골 힐링 로파이" },
-      { titleKo: "은하수가 흐르는 신라 고궁 밤하늘", titleEn: "Milky Way Shilla Palace Night", instKo: "25현 가야금", promptKo: "은하수가 가득한 신라 고궁 밤하늘 아래 25현 가야금의 몽환적이고 아름다운 수면 힐링 곡" },
-      { titleKo: "제주 돌담길 억새밭 노을 바람", titleEn: "Jeju Stone Wall Sunset Wind", instKo: "단소 & 바다 바람소리", promptKo: "제주도 노을빛 돌담길 억새밭 사이로 시원하게 불어오는 단소 바람소리 힐링 로파이" },
-      { titleKo: "1930s 경성 아날로그 다락방 감성 LP", titleEn: "1930s Gyeongseong Vintage Night Lofi", instKo: "해금 & 재즈 피아노", promptKo: "1930년대 서울 경성 아날로그 다락방에서 LP판으로 듣는 해금 재즈 힐링 로파이" }
+      { titleKo: `${baseThemeTitle}의 은은한 서곡`, titleEn: `Moonlight ${instName} Prelude`, instKo: `${instName} & 밤 빗소리`, promptKo: `${baseThemeTitle} 분위기에서 ${instName}과 은은한 밤 빗소리가 아늑하게 어우러지는 수면 힐링 ${waveName} 국악 로파이` },
+      { titleKo: `${baseThemeTitle} 속 해금 선율`, titleEn: `Healing ${instName} Melody`, instKo: "해금 & 피아노", promptKo: `${baseThemeTitle} 테마 속에서 들려오는 따뜻하고 아늑한 해금 피아노 듀엣 수면 공부 로파이 3분 곡` },
+      { titleKo: `${baseThemeTitle}의 자정 수면 음률`, titleEn: `Midnight ${instName} Sleep Wave`, instKo: `${instName} & 숲속 모닥불`, promptKo: `${baseThemeTitle} 깊은 산속 한옥 정자에서 피어오르는 대금 솔페지오 불멍 수면 힐링 ${waveName} 로파이` },
+      { titleKo: `${baseThemeTitle}의 거문고 밤 빗소리`, titleEn: `Midnight Rain ${instName} Sleep Lofi`, instKo: "거문고 & 잔잔한 빗소리", promptKo: `${baseThemeTitle} 공간에서 거문고 선율과 잔잔한 빗소리가 전하는 불면증 극복 국악 로파이` },
+      { titleKo: `${baseThemeTitle}과 도깨비 수면 오르골`, titleEn: `Mystic ${instName} Forest Sleep Box`, instKo: "태평소 & 오르골", promptKo: `${baseThemeTitle} 신비로운 숲속 밤하늘 아래 조용히 퍼지는 ${waveName} 수면 오르골 힐링 로파이` },
+      { titleKo: `${baseThemeTitle}의 몽환적 선율`, titleEn: `Milky Way ${instName} Night`, instKo: "25현 가야금", promptKo: `${baseThemeTitle} 은하수가 가득한 신라 고궁 밤하늘 아래 25현 가야금의 몽환적인 수면 힐링 곡` },
+      { titleKo: `${baseThemeTitle}의 저녁 노을 바람`, titleEn: `Jeju ${instName} Sunset Wind`, instKo: "단소 & 바다 바람소리", promptKo: `${baseThemeTitle} 노을빛 돌담길 억새밭 사이로 시원하게 불어오는 단소 바람소리 힐링 로파이` },
+      { titleKo: `${baseThemeTitle}의 아날로그 LP 감성`, titleEn: `Gyeongseong Vintage ${instName} Lofi`, instKo: "해금 & 재즈 피아노", promptKo: `${baseThemeTitle} 아날로그 다락방에서 LP판으로 듣는 해금 재즈 힐링 로파이` }
     ];
     const curr = sampleThemes[i % sampleThemes.length];
     return {
@@ -309,6 +313,7 @@ export default function Home() {
   const [renderProgress, setRenderProgress] = useState(0);
   const [renderLog, setRenderLog] = useState("No render job active.");
   const [isRendering, setIsRendering] = useState(false);
+  const [kaggleRemainingSeconds, setKaggleRemainingSeconds] = useState(108000);
 
   const [isYouTubeConnected, setIsYouTubeConnected] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("idle");
@@ -424,6 +429,11 @@ export default function Home() {
         if (savedConnected === "true" && savedModel) {
           setIsApiConnected(true);
           setSelectedGeminiModel(savedModel);
+        }
+
+        const savedKaggleTime = localStorage.getItem("kaggle_remaining_seconds");
+        if (savedKaggleTime) {
+          setKaggleRemainingSeconds(parseInt(savedKaggleTime, 10));
         }
 
         // Auto-restore draft from localStorage
@@ -819,6 +829,12 @@ export default function Home() {
             setIsRendering(false);
             if (data.status === "success") {
               fetchLibrary();
+              const usedSecs = targetDurationHours * 3600;
+              setKaggleRemainingSeconds(prev => {
+                const next = Math.max(0, prev - usedSecs);
+                localStorage.setItem("kaggle_remaining_seconds", next);
+                return next;
+              });
             }
           }
         }
@@ -1125,7 +1141,7 @@ export default function Home() {
           width: "40px", 
           height: "40px", 
           border: "2px solid rgba(255,255,255,0.1)", 
-          borderTopColor: "#e82127", 
+          borderTopColor: "#a1a1aa", 
           borderRadius: "50%", 
           animation: "spin 1s linear infinite" 
         }} />
@@ -1221,9 +1237,9 @@ export default function Home() {
               marginTop: "24px", 
               padding: "12px", 
               borderRadius: "8px", 
-              background: "rgba(232, 33, 39, 0.1)", 
-              border: "1px solid rgba(232, 33, 39, 0.2)",
-              color: "#e82127", 
+              background: "rgba(161, 161, 170, 0.1)", 
+              border: "1px solid rgba(161, 161, 170, 0.2)",
+              color: "#a1a1aa", 
               fontSize: "13px",
               lineHeight: "1.5"
             }}>
@@ -1255,7 +1271,7 @@ export default function Home() {
         >
           LOG OUT
         </button>
-        <h1 className="gradient-text text-glow-red" style={{ 
+        <h1 className="gradient-text text-glow-subtle" style={{ 
           fontFamily: "var(--font-outfit)", 
           fontSize: "36px", 
           fontWeight: "800", 
@@ -1282,7 +1298,7 @@ export default function Home() {
         flexWrap: "wrap"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "12px", color: "var(--accent-red)" }}>●</span>
+          <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>●</span>
           <div>
             <div style={{ fontSize: "13px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "1px" }}>
               GOOGLE GEMINI AI ENGINE ACTIVE
@@ -1303,8 +1319,8 @@ export default function Home() {
             }}
             style={{
               background: "#05030a",
-              color: "#e82127",
-              border: "1px solid #e82127",
+              color: "#a1a1aa",
+              border: "1px solid #a1a1aa",
               padding: "6px 12px",
               borderRadius: "6px",
               fontSize: "12px",
@@ -1345,9 +1361,9 @@ export default function Home() {
               padding: "6px 14px",
               fontSize: "12px",
               fontWeight: "800",
-              background: "rgba(232, 33, 39, 0.2)",
-              color: "#e82127",
-              border: "1px solid #e82127",
+              background: "rgba(161, 161, 170, 0.2)",
+              color: "#a1a1aa",
+              border: "1px solid #a1a1aa",
               borderRadius: "6px",
               cursor: "pointer",
               opacity: isTestingApi ? 0.5 : 1
@@ -1362,8 +1378,8 @@ export default function Home() {
       <div className="glass-panel" style={{ 
         marginBottom: "20px", 
         padding: "16px 20px", 
-        border: "1px solid rgba(232, 33, 39, 0.4)",
-        background: "rgba(232, 33, 39, 0.05)",
+        border: "1px solid rgba(161, 161, 170, 0.4)",
+        background: "rgba(161, 161, 170, 0.05)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1373,7 +1389,7 @@ export default function Home() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: "300px" }}>
           <div style={{ fontSize: "28px" }}>📂</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: "14px", fontWeight: "800", color: "#e82127", marginBottom: "4px" }}>
+            <div style={{ fontSize: "14px", fontWeight: "800", color: "#a1a1aa", marginBottom: "4px" }}>
               프로젝트 변경 & 새 채널 브랜딩 선택기
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -1406,8 +1422,8 @@ export default function Home() {
                 }}
                 style={{
                   background: "#0a0612",
-                  color: "#e82127",
-                  border: "1px solid rgba(232, 33, 39, 0.4)",
+                  color: "#a1a1aa",
+                  border: "1px solid rgba(161, 161, 170, 0.4)",
                   padding: "8px 12px",
                   borderRadius: "6px",
                   fontSize: "13px",
@@ -1447,11 +1463,11 @@ export default function Home() {
         <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
 
           {/* AI Recommended Topic & Chat */}
-          <div className="glass-panel" style={{ borderColor: "rgba(232, 33, 39, 0.6)", boxShadow: "0 0 30px rgba(232, 33, 39, 0.25)" }}>
+          <div className="glass-panel" style={{ borderColor: "rgba(161, 161, 170, 0.6)", boxShadow: "0 0 30px rgba(161, 161, 170, 0.25)" }}>
             
-            <div style={{ background: "rgba(232, 33, 39, 0.08)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ background: "rgba(161, 161, 170, 0.08)", border: "1px solid rgba(161, 161, 170, 0.3)", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: "800", color: "#e82127", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "14px", fontWeight: "800", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
                   🏆 [현재 활성화된 추천 주제]
                 </span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -1459,9 +1475,9 @@ export default function Home() {
                     type="button"
                     onClick={() => setShowMonthCalendar(!showMonthCalendar)}
                     style={{
-                      background: showMonthCalendar ? "rgba(232, 33, 39, 0.3)" : "rgba(232, 33, 39, 0.2)",
-                      border: showMonthCalendar ? "1px solid #e82127" : "1px solid #e82127",
-                      color: showMonthCalendar ? "#e82127" : "#e82127",
+                      background: showMonthCalendar ? "rgba(161, 161, 170, 0.3)" : "rgba(161, 161, 170, 0.2)",
+                      border: showMonthCalendar ? "1px solid #a1a1aa" : "1px solid #a1a1aa",
+                      color: showMonthCalendar ? "#a1a1aa" : "#a1a1aa",
                       padding: "4px 10px",
                       borderRadius: "6px",
                       fontSize: "11px",
@@ -1493,7 +1509,7 @@ export default function Home() {
                   flexDirection: "column",
                   gap: "6px"
                 }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", color: "#e82127", marginBottom: "4px", display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", color: "#a1a1aa", marginBottom: "4px", display: "flex", justifyContent: "space-between" }}>
                     <span>🗓️ 30일치 요일별 킬러 주제 목록 (원하는 날짜 선택):</span>
                     <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>원클릭 주제 전환 가능</span>
                   </div>
@@ -1531,8 +1547,8 @@ export default function Home() {
                         }}
                         style={{
                           padding: "8px 12px",
-                          background: isSelectedItem ? "rgba(232, 33, 39, 0.2)" : "rgba(255,255,255,0.03)",
-                          border: isSelectedItem ? "2px solid #e82127" : "1px solid var(--glass-border)",
+                          background: isSelectedItem ? "rgba(161, 161, 170, 0.2)" : "rgba(255,255,255,0.03)",
+                          border: isSelectedItem ? "2px solid #a1a1aa" : "1px solid var(--glass-border)",
                           borderRadius: "6px",
                           fontSize: "12px",
                           color: "#fff",
@@ -1542,10 +1558,10 @@ export default function Home() {
                           alignItems: "center"
                         }}
                       >
-                        <span style={{ fontWeight: isSelectedItem ? "800" : "700", color: isSelectedItem ? "#e82127" : "#fff" }}>
+                        <span style={{ fontWeight: isSelectedItem ? "800" : "700", color: isSelectedItem ? "#a1a1aa" : "#fff" }}>
                           {item.day}: {item.title} {isSelectedItem ? "🟢 [현재 선택됨]" : ""}
                         </span>
-                        <span style={{ fontSize: "11px", color: isSelectedItem ? "#e82127" : "#e2e8f0", background: isSelectedItem ? "rgba(232, 33, 39,0.2)" : "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "4px" }}>
+                        <span style={{ fontSize: "11px", color: isSelectedItem ? "#a1a1aa" : "#e2e8f0", background: isSelectedItem ? "rgba(161, 161, 170,0.2)" : "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "4px" }}>
                           {isSelectedItem ? "✓ 적용중" : "👉 이 주제 선택"}
                         </span>
                       </div>
@@ -1562,8 +1578,8 @@ export default function Home() {
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "12px" }}>
                 <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e2e8f0" }}>{topTrendingTheme.viewPotential}</span>
-                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e82127" }}>🎻 {topTrendingTheme.targetInstruments}</span>
-                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#e82127" }}>🧠 {topTrendingTheme.brainwave}</span>
+                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#a1a1aa" }}>🎻 {topTrendingTheme.targetInstruments}</span>
+                <span style={{ background: "rgba(255, 255, 255, 0.08)", padding: "4px 10px", borderRadius: "6px", color: "#a1a1aa" }}>🧠 {topTrendingTheme.brainwave}</span>
               </div>
             </div>
 
@@ -1576,7 +1592,7 @@ export default function Home() {
                   <div key={idx} style={{
                     alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
                     maxWidth: "85%",
-                    background: msg.sender === "user" ? "rgba(232, 33, 39,0.3)" : "rgba(255,255,255,0.08)",
+                    background: msg.sender === "user" ? "rgba(161, 161, 170,0.3)" : "rgba(255,255,255,0.08)",
                     border: msg.sender === "user" ? "1px solid var(--accent-purple)" : "1px solid var(--glass-border)",
                     borderRadius: "10px",
                     padding: "8px 12px",
@@ -1587,7 +1603,7 @@ export default function Home() {
                   </div>
                 ))}
                 {isAiThinking && (
-                  <div style={{ alignSelf: "flex-start", fontSize: "12px", color: "#e82127", fontStyle: "italic" }}>🤖 답변 작성 중...</div>
+                  <div style={{ alignSelf: "flex-start", fontSize: "12px", color: "#a1a1aa", fontStyle: "italic" }}>🤖 답변 작성 중...</div>
                 )}
               </div>
               <form onSubmit={handleSendChatMessage} style={{ display: "flex", gap: "8px" }}>
@@ -1628,8 +1644,8 @@ export default function Home() {
               }}
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: isDragging ? "2px dashed #e82127" : userMediaUrl ? "2px solid #e82127" : "2px dashed var(--glass-border)",
-                background: isDragging ? "rgba(232, 33, 39, 0.1)" : userMediaUrl ? "rgba(232, 33, 39, 0.03)" : "rgba(0, 0, 0, 0.3)",
+                border: isDragging ? "2px dashed #a1a1aa" : userMediaUrl ? "2px solid #a1a1aa" : "2px dashed var(--glass-border)",
+                background: isDragging ? "rgba(161, 161, 170, 0.1)" : userMediaUrl ? "rgba(161, 161, 170, 0.03)" : "rgba(0, 0, 0, 0.3)",
                 borderRadius: "12px",
                 padding: "20px",
                 textAlign: "center",
@@ -1650,7 +1666,7 @@ export default function Home() {
                 }}
               />
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>{userMediaUrl ? "✅" : "📁"}</div>
-              <div style={{ fontSize: "14px", fontWeight: "800", color: userMediaUrl ? "#e82127" : "#ffffff", marginBottom: "4px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "800", color: userMediaUrl ? "#a1a1aa" : "#ffffff", marginBottom: "4px" }}>
                 {userMediaUrl ? `첨부 완료: ${userMediaName || "비디오/이미지 자산"}` : "여기에 8초 비디오(.mp4) 또는 이미지(.jpg/.png)를 끌어다 놓으세요!"}
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
@@ -1668,14 +1684,14 @@ export default function Home() {
                     padding: "8px 16px",
                     fontSize: "12px",
                     fontWeight: "800",
-                    background: "linear-gradient(135deg, #e82127 0%, #00b4d8 100%)",
+                    background: "linear-gradient(135deg, #a1a1aa 0%, #00b4d8 100%)",
                     color: "#000000",
                     borderRadius: "6px",
                     textDecoration: "none",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
-                    boxShadow: "0 0 15px rgba(232, 33, 39, 0.4)",
+                    boxShadow: "0 0 15px rgba(161, 161, 170, 0.4)",
                     cursor: "pointer"
                   }}
                 >
@@ -1708,7 +1724,7 @@ export default function Home() {
                 <div style={{ textAlign: "center", padding: "20px", color: "var(--text-secondary)", fontSize: "13px" }}>
                   <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.5 }}>🎬</div>
                   <div>위의 상자에 <strong>8초 비디오 파일</strong>을 첨부하시면</div>
-                  <div style={{ fontSize: "11px", marginTop: "4px", color: "#e82127" }}>여기서 8초 무한 루프 영상을 1초 만에 바로 미리보실 수 있습니다!</div>
+                  <div style={{ fontSize: "11px", marginTop: "4px", color: "#a1a1aa" }}>여기서 8초 무한 루프 영상을 1초 만에 바로 미리보실 수 있습니다!</div>
                 </div>
               )}
 
@@ -1736,7 +1752,7 @@ export default function Home() {
                       position: "absolute",
                       inset: "-8px",
                       borderRadius: "50%",
-                      background: "radial-gradient(circle, rgba(232, 33, 39, 0.4) 0%, transparent 75%)",
+                      background: "radial-gradient(circle, rgba(161, 161, 170, 0.4) 0%, transparent 75%)",
                       opacity: 0.3 + audioLevels.treble * 0.7,
                       filter: "blur(8px)"
                     }}
@@ -1752,8 +1768,8 @@ export default function Home() {
                       objectFit: "cover",
                       borderRadius: "50%",
                       filter: `
-                        drop-shadow(0 0 ${5 + audioLevels.bass * 12}px rgba(232, 33, 39, ${0.4 + audioLevels.bass * 0.6}))
-                        drop-shadow(0 0 ${2 + audioLevels.mid * 8}px rgba(232, 33, 39, ${0.3 + audioLevels.mid * 0.7}))
+                        drop-shadow(0 0 ${5 + audioLevels.bass * 12}px rgba(161, 161, 170, ${0.4 + audioLevels.bass * 0.6}))
+                        drop-shadow(0 0 ${2 + audioLevels.mid * 8}px rgba(161, 161, 170, ${0.3 + audioLevels.mid * 0.7}))
                         brightness(${1.0 + audioLevels.mid * 0.25})
                       `,
                       transition: "filter 0.05s ease-out"
@@ -1767,11 +1783,11 @@ export default function Home() {
                       inset: "-4px",
                       border: "2.5px solid transparent",
                       borderRadius: "50%",
-                      backgroundImage: "linear-gradient(#05030a, #05030a), linear-gradient(to right, #e82127, #e82127)",
+                      backgroundImage: "linear-gradient(#05030a, #05030a), linear-gradient(to right, #a1a1aa, #a1a1aa)",
                       backgroundOrigin: "border-box",
                       backgroundClip: "content-box, border-box",
                       animation: "spin 25s linear infinite",
-                      boxShadow: `0 0 ${3 + audioLevels.bass * 10}px #e82127, inset 0 0 ${2 + audioLevels.mid * 5}px #e82127`,
+                      boxShadow: `0 0 ${3 + audioLevels.bass * 10}px #a1a1aa, inset 0 0 ${2 + audioLevels.mid * 5}px #a1a1aa`,
                       opacity: 0.85
                     }}
                   />
@@ -1790,26 +1806,47 @@ export default function Home() {
             {/* 8초 비디오 생성용 커스텀 프롬프트 입력 영역 */}
             <div style={{ background: "rgba(0,0,0,0.3)", padding: "14px", borderRadius: "10px", border: "1px solid var(--glass-border)", marginBottom: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
-                <span style={{ fontSize: "13px", color: "var(--accent-cyan)", fontWeight: "800" }}>
-                  🎬 AI 8초 비디오 생성용 프롬프트 (한글 / 영문 자유 입력):
+                <span style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: "800" }}>
+                  🎬 AI 8초 비디오 생성 제어 센터 (한글 연출 & 영문 헌법 결합)
                 </span>
+                
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(customVideoPrompt);
-                      alert("📋 영문 프롬프트가 클립보드에 복사되었습니다! Runway / Midjourney에 바로 붙여넣기(Ctrl+V) 하세요!");
+                    onClick={async () => {
+                      setIsSyncingPrompt(true);
+                      try {
+                        const res = await fetch("/api/translate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            text: customKoreanPrompt,
+                            type: "visual",
+                            modelName: selectedGeminiModel
+                          })
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          const translated = data.translatedVideo || data.translatedImage || "A cozy 2D lofi animation";
+                          const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                          const combined = `${translated}, ${fixedConstitution}`;
+                          navigator.clipboard.writeText(combined);
+                          alert("✅ [한글 지시 번역] + [영문 AI 헌법]이 성공적으로 결합되어 클립보드에 복사되었습니다!");
+                        } else {
+                          throw new Error("Translation failed");
+                        }
+                      } catch (err) {
+                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                        const combined = `${customKoreanPrompt}, ${fixedConstitution}`;
+                        navigator.clipboard.writeText(combined);
+                        alert("⚠️ 번역 지연으로 원본 결합 텍스트가 클립보드에 복사되었습니다!");
+                      } finally {
+                        setIsSyncingPrompt(false);
+                      }
                     }}
-                    style={{
-                      padding: "4px 12px",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      background: "#e82127",
-                      color: "#000000",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer"
-                    }}
+                    disabled={isSyncingPrompt}
+                    className="btn-secondary"
+                    style={{ padding: "6px 12px", fontSize: "11px", display: "flex", alignItems: "center" }}
                   >
                     📋 원클릭 영문 프롬프트 복사
                   </button>
@@ -1817,23 +1854,42 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!customVideoPrompt.trim()) {
-                        alert("비디오 프롬프트를 입력해 주세요!");
+                      if (!customKoreanPrompt.trim()) {
+                        alert("한글 연출 지시를 입력해 주세요!");
                         return;
                       }
                       setIsGeneratingVideo(true);
-                      setVideoLog("AI가 프롬프트로 8초 비디오 렌더링을 요청하는 중...");
+                      setVideoLog("AI가 프롬프트 번역 및 8초 비디오 생성을 요청하는 중...");
                       try {
+                        // 1. Translate
+                        const translateRes = await fetch("/api/translate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            text: customKoreanPrompt,
+                            type: "visual",
+                            modelName: selectedGeminiModel
+                          })
+                        });
+                        let translated = "A cozy 2D lofi animation";
+                        if (translateRes.ok) {
+                          const transData = await translateRes.json();
+                          translated = transData.translatedVideo || transData.translatedImage || translated;
+                        }
+                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                        const combinedPrompt = `${translated}, ${fixedConstitution}`;
+                        
+                        // 2. Generate Video
                         const res = await fetch("/api/generate-video", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
-                            prompt: customVideoPrompt.trim()
+                            prompt: combinedPrompt
                           })
                         });
                         if (res.ok) {
                           const data = await res.json();
-                          setVideoLog("Veo 비디오 생성 작업이 접수되었습니다! 상태를 폴링합니다...");
+                          setVideoLog("Veo 비디오 생성 작업이 캐글 클라우드로 전송되었습니다! 폴링 중...");
                           pollVideoStatus(data.operationName);
                         } else {
                           const err = await res.json();
@@ -1845,44 +1901,60 @@ export default function Home() {
                         setIsGeneratingVideo(false);
                       }
                     }}
-                    disabled={isGeneratingVideo}
-                    style={{
-                      padding: "4px 12px",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      background: "rgba(232, 33, 39, 0.2)",
-                      color: "#e82127",
-                      border: "1px solid #e82127",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      opacity: isGeneratingVideo ? 0.5 : 1
-                    }}
+                    disabled={isGeneratingVideo || isSyncingPrompt}
+                    className="btn-primary"
+                    style={{ padding: "6px 12px", fontSize: "11px", display: "flex", alignItems: "center" }}
                   >
                     {isGeneratingVideo ? "⏳ 생성 중..." : "🎬 8초 비디오 생성 시작"}
                   </button>
                 </div>
               </div>
-              <textarea
-                value={customVideoPrompt}
-                onChange={(e) => setCustomVideoPrompt(e.target.value)}
-                placeholder="영문 고정 기술 파라미터와 아래쪽 한글 연출 문장이 표시됩니다."
-                rows={6}
-                style={{
-                  width: "100%",
+
+              {/* 1. 영문 고정 헌법 (수정 불가) */}
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ display: "block", fontSize: "10px", color: "var(--text-secondary)", marginBottom: "3px", fontWeight: "700" }}>
+                  🌐 [영문 비디오 AI 고정 헌법 규칙 - 수정불가]
+                </label>
+                <div style={{
                   background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(232, 33, 39, 0.4)",
-                  borderRadius: "8px",
-                  padding: "12px",
-                  color: "#fff",
-                  fontSize: "12px",
-                  lineHeight: "1.5",
-                  fontFamily: "sans-serif",
-                  resize: "vertical"
-                }}
-              />
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: "6px",
+                  padding: "8px 12px",
+                  fontSize: "11px",
+                  color: "var(--text-secondary)",
+                  lineHeight: "1.4",
+                  fontFamily: "var(--font-mono)"
+                }}>
+                  perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style
+                </div>
+              </div>
+
+              {/* 2. 한글 지시 프롬프트 (수정 가능) */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: "var(--text-primary)", marginBottom: "3px", fontWeight: "700" }}>
+                  🇰🇷 [총감독님 한글 연출 지시 - 수정가능]
+                </label>
+                <textarea
+                  value={customKoreanPrompt}
+                  onChange={(e) => setCustomKoreanPrompt(e.target.value)}
+                  placeholder="예: 어두운 밤, 별이 쏟아지는 깊은 산속 한옥 정자 마당에서..."
+                  rows={4}
+                  style={{
+                    width: "100%",
+                    background: "rgba(39, 39, 42, 0.4)",
+                    border: "1px solid var(--glass-border)",
+                    borderRadius: "6px",
+                    padding: "10px",
+                    color: "#fff",
+                    fontSize: "12px",
+                    lineHeight: "1.5",
+                    resize: "vertical"
+                  }}
+                />
+              </div>
 
               {videoLog && (
-                <div style={{ marginTop: "8px", padding: "8px 12px", background: "rgba(0,0,0,0.6)", border: "1px solid var(--glass-border)", borderRadius: "6px", fontSize: "11px", color: "#e82127", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
+                <div style={{ marginTop: "8px", padding: "8px 12px", background: "rgba(0,0,0,0.6)", border: "1px solid var(--glass-border)", borderRadius: "6px", fontSize: "11px", color: "var(--text-secondary)", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
                   {videoLog}
                 </div>
               )}
@@ -1904,9 +1976,9 @@ export default function Home() {
                   {visualPrompts.map((p, pIdx) => {
                     const isTranslating = translatingVisualPromptId === p.id;
                     return (
-                      <div key={p.id || pIdx} style={{ background: "rgba(0,0,0,0.4)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(232, 33, 39, 0.3)", fontSize: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div key={p.id || pIdx} style={{ background: "rgba(0,0,0,0.4)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(161, 161, 170, 0.3)", fontSize: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "#e82127", fontWeight: "800" }}>{p.title || `Visual Prompt #${pIdx + 1}`}</span>
+                          <span style={{ color: "#a1a1aa", fontWeight: "800" }}>{p.title || `Visual Prompt #${pIdx + 1}`}</span>
                           <button
                             type="button"
                             onClick={() => handleTranslateVisualPrompt(p.id)}
@@ -1915,9 +1987,9 @@ export default function Home() {
                               padding: "4px 10px",
                               fontSize: "11px",
                               fontWeight: "700",
-                              background: "rgba(232, 33, 39, 0.15)",
-                              color: "#e82127",
-                              border: "1px solid #e82127",
+                              background: "rgba(161, 161, 170, 0.15)",
+                              color: "#a1a1aa",
+                              border: "1px solid #a1a1aa",
                               borderRadius: "4px",
                               cursor: "pointer"
                             }}
@@ -1958,9 +2030,9 @@ export default function Home() {
                                 padding: "2px 6px",
                                 fontSize: "10px",
                                 fontWeight: "700",
-                                background: copiedPromptId === `v_img_${p.id}` ? "#e82127" : "rgba(232, 33, 39, 0.1)",
-                                color: copiedPromptId === `v_img_${p.id}` ? "#000" : "#e82127",
-                                border: "1px solid #e82127",
+                                background: copiedPromptId === `v_img_${p.id}` ? "#a1a1aa" : "rgba(161, 161, 170, 0.1)",
+                                color: copiedPromptId === `v_img_${p.id}` ? "#000" : "#a1a1aa",
+                                border: "1px solid #a1a1aa",
                                 borderRadius: "4px",
                                 cursor: "pointer"
                               }}
@@ -2002,9 +2074,9 @@ export default function Home() {
                                 padding: "2px 6px",
                                 fontSize: "10px",
                                 fontWeight: "700",
-                                background: copiedPromptId === `v_vid_${p.id}` ? "#e82127" : "rgba(232, 33, 39, 0.1)",
-                                color: copiedPromptId === `v_vid_${p.id}` ? "#000" : "#e82127",
-                                border: "1px solid #e82127",
+                                background: copiedPromptId === `v_vid_${p.id}` ? "#a1a1aa" : "rgba(161, 161, 170, 0.1)",
+                                color: copiedPromptId === `v_vid_${p.id}` ? "#000" : "#a1a1aa",
+                                border: "1px solid #a1a1aa",
                                 borderRadius: "4px",
                                 cursor: "pointer"
                               }}
@@ -2044,13 +2116,13 @@ export default function Home() {
               <h2 style={{ fontSize: "18px", fontWeight: "800", color: "var(--accent-purple)", display: "flex", alignItems: "center", gap: "8px" }}>
                 🎵 [20곡 Lofi 음악 스튜디오]
               </h2>
-              <span className="badge badge-pending" style={{ fontSize: "11px", background: "rgba(232, 33, 39, 0.2)", color: "#e82127", border: "1px solid #e82127" }}>음악 영역</span>
+              <span className="badge badge-pending" style={{ fontSize: "11px", background: "rgba(161, 161, 170, 0.2)", color: "#a1a1aa", border: "1px solid #a1a1aa" }}>음악 영역</span>
             </div>
 
             {/* Target Duration Selector & Track Duration Config */}
             <div style={{ background: "rgba(255, 255, 255, 0.04)", padding: "12px 16px", borderRadius: "10px", border: "1px solid var(--glass-border)", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "13px", fontWeight: "700", color: "#e82127" }}>⏱️ 최종 영상 길이:</span>
+                <span style={{ fontSize: "13px", fontWeight: "700", color: "#a1a1aa" }}>⏱️ 최종 영상 길이:</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[1, 2, 3].map((hr) => (
                     <button
@@ -2062,9 +2134,9 @@ export default function Home() {
                         fontSize: "12px",
                         fontWeight: "800",
                         borderRadius: "6px",
-                        border: targetDurationHours === hr ? "2px solid #e82127" : "1px solid rgba(255,255,255,0.2)",
-                        background: targetDurationHours === hr ? "rgba(232, 33, 39,0.2)" : "rgba(0,0,0,0.4)",
-                        color: targetDurationHours === hr ? "#e82127" : "#aaa",
+                        border: targetDurationHours === hr ? "2px solid #a1a1aa" : "1px solid rgba(255,255,255,0.2)",
+                        background: targetDurationHours === hr ? "rgba(161, 161, 170,0.2)" : "rgba(0,0,0,0.4)",
+                        color: targetDurationHours === hr ? "#a1a1aa" : "#aaa",
                         cursor: "pointer"
                       }}
                     >
@@ -2075,7 +2147,7 @@ export default function Home() {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                <span style={{ fontSize: "13px", fontWeight: "700", color: "#e82127" }}>⏱️ 곡당 목표 시간 세팅:</span>
+                <span style={{ fontSize: "13px", fontWeight: "700", color: "#a1a1aa" }}>⏱️ 곡당 목표 시간 세팅:</span>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[
                     { min: 3, label: "3분 (180초, 기본)" },
@@ -2091,9 +2163,9 @@ export default function Home() {
                         fontSize: "11px",
                         fontWeight: "800",
                         borderRadius: "6px",
-                        border: trackDurationMinutes === dur.min ? "2px solid #e82127" : "1px solid rgba(255,255,255,0.15)",
-                        background: trackDurationMinutes === dur.min ? "rgba(232, 33, 39,0.25)" : "rgba(0,0,0,0.4)",
-                        color: trackDurationMinutes === dur.min ? "#e82127" : "#aaa",
+                        border: trackDurationMinutes === dur.min ? "2px solid #a1a1aa" : "1px solid rgba(255,255,255,0.15)",
+                        background: trackDurationMinutes === dur.min ? "rgba(161, 161, 170,0.25)" : "rgba(0,0,0,0.4)",
+                        color: trackDurationMinutes === dur.min ? "#a1a1aa" : "#aaa",
                         cursor: "pointer"
                       }}
                     >
@@ -2123,9 +2195,9 @@ export default function Home() {
                 }
               }}
               style={{
-                background: "rgba(232, 33, 39, 0.12)",
-                border: "2px dashed #e82127",
-                boxShadow: "0 0 15px rgba(232, 33, 39, 0.2)",
+                background: "rgba(161, 161, 170, 0.12)",
+                border: "2px dashed #a1a1aa",
+                boxShadow: "0 0 15px rgba(161, 161, 170, 0.2)",
                 borderRadius: "10px",
                 padding: "16px",
                 marginBottom: "14px",
@@ -2134,7 +2206,7 @@ export default function Home() {
                 transition: "all 0.2s"
               }}
             >
-              <div style={{ fontSize: "14px", fontWeight: "900", color: "#e82127", marginBottom: "4px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "900", color: "#a1a1aa", marginBottom: "4px" }}>
                 📂 [20곡 한꺼번에 드래그 앤 드롭 파일 선택] (Suno/Udio/MusicFX 제작 파일)
               </div>
               <div style={{ fontSize: "12px", color: "#e2e8f0", marginBottom: "10px" }}>
@@ -2147,10 +2219,10 @@ export default function Home() {
                 multiple 
                 accept="audio/*" 
                 onChange={(e) => handleAudioFilesUpload(e.target.files)}
-                style={{ fontSize: "12px", color: "#e82127", cursor: "pointer" }}
+                style={{ fontSize: "12px", color: "#a1a1aa", cursor: "pointer" }}
               />
               {Object.keys(customAudioTracks).length > 0 && (
-                <div style={{ marginTop: "10px", fontSize: "12px", color: "#e82127", fontWeight: "900" }}>
+                <div style={{ marginTop: "10px", fontSize: "12px", color: "#a1a1aa", fontWeight: "900" }}>
                   ✓ 총 {Object.keys(customAudioTracks).length}개 트랙 슬롯에 음원이 꽂혀있습니다. (미첨부 슬롯은 AI 음원으로 자동 채움)
                 </div>
               )}
@@ -2168,17 +2240,21 @@ export default function Home() {
                   fontSize: "14px",
                   fontWeight: "800",
                   justifyContent: "center",
-                  background: "linear-gradient(135deg, #e82127 0%, #ec4899 100%)",
-                  opacity: !isApiConnected ? 0.5 : 1
+                  background: "linear-gradient(135deg, #52525b 0%, #a1a1aa 100%)",
+                  opacity: !isApiConnected ? 0.5 : 1,
+                  color: "#000"
                 }}
               >
-                {!isApiConnected ? "🔒 API 연결 필요 (상단에서 모델 접속 클릭)" : isGeneratingMusicPrompts ? "🎼 제미나이가 20곡 획일성 맞춤 음악 기획 중..." : `🎵 1단계: 오늘 주제 맞춤 20곡 Lofi 프롬프트 생성 (${trackDurationMinutes}분 곡 분량 지정)`}
+                {!isApiConnected ? "🔒 API 연결 필요" : isGeneratingMusicPrompts ? "🎼 음악 기획 생성 중..." : "🎵 1단계: 음악 기획 생성"}
               </button>
+              <div style={{ fontSize: "11px", color: "var(--text-secondary)", textAlign: "center", marginTop: "4px" }}>
+                오늘 주제에 맞춘 20곡 Lofi 음악 프롬프트를 일괄 생성합니다. ({trackDurationMinutes}분 분량 지정)
+              </div>
             </div>
 
             {/* Master Volume Slider */}
             <div style={{ background: "rgba(0,0,0,0.4)", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--glass-border)", marginBottom: "14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "#e82127" }}>🔊 음악 마스터 볼륨:</span>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#a1a1aa" }}>🔊 음악 마스터 볼륨:</span>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "60%" }}>
                 <input 
                   type="range" 
@@ -2193,7 +2269,7 @@ export default function Home() {
                   }}
                   style={{ width: "100%" }}
                 />
-                <span style={{ fontSize: "12px", color: "#e82127", fontWeight: "800", minWidth: "36px" }}>{Math.round(masterVolume * 100)}%</span>
+                <span style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "800", minWidth: "36px" }}>{Math.round(masterVolume * 100)}%</span>
               </div>
             </div>
 
@@ -2210,7 +2286,7 @@ export default function Home() {
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "11px", fontWeight: "800", color: "var(--text-secondary)", letterSpacing: "1px" }}>AUDIO HUD SPECTRUM</span>
-                <span style={{ fontSize: "10px", color: "var(--accent-red)", fontWeight: "800", fontFamily: "monospace" }}>
+                <span style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "800", fontFamily: "monospace" }}>
                   BASS: {Math.round(audioLevels.bass * 100)}% | MID: {Math.round(audioLevels.mid * 100)}% | TREBLE: {Math.round(audioLevels.treble * 100)}%
                 </span>
               </div>
@@ -2233,7 +2309,7 @@ export default function Home() {
                       style={{ 
                         height: `${heightVal}px`,
                         width: "3px",
-                        background: "var(--accent-red)",
+                        background: "var(--text-secondary)",
                         borderRadius: "1px",
                         transition: "height 0.05s ease" 
                       }} 
@@ -2245,7 +2321,7 @@ export default function Home() {
 
             {/* 20 Dedicated Track Slots (Strict 1..20 Order with Individual Drag&Drop) */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "380px", overflowY: "auto", paddingRight: "4px" }}>
-              <div style={{ fontSize: "12px", color: "#e82127", fontWeight: "800", marginBottom: "2px" }}>
+              <div style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "800", marginBottom: "2px" }}>
                 🎵 20곡 개별 지정 슬롯 (트랙 01 ~ 트랙 20 꽂기 & 프롬프트 복사):
               </div>
               {sample20Tracks.map((track, idx) => {
@@ -2262,10 +2338,10 @@ export default function Home() {
                   <div 
                     key={trackNum} 
                     style={{ 
-                      background: isCurrentPlaying ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)", 
+                      background: isCurrentPlaying ? "rgba(161, 161, 170, 0.2)" : "rgba(0,0,0,0.4)", 
                       padding: "10px 12px", 
                       borderRadius: "8px", 
-                      border: hasValidTrack ? "1px solid #e82127" : isCurrentPlaying ? "1px solid #e82127" : "1px solid rgba(255, 255, 255, 0.1)",
+                      border: hasValidTrack ? "1px solid #a1a1aa" : isCurrentPlaying ? "1px solid #a1a1aa" : "1px solid rgba(255, 255, 255, 0.1)",
                       display: "flex", 
                       flexDirection: "column", 
                       gap: "6px" 
@@ -2278,13 +2354,13 @@ export default function Home() {
                           style={{ 
                             fontSize: "11px", 
                             fontWeight: "800",
-                            background: hasValidTrack ? "#e82127" : "rgba(255, 255, 255, 0.1)",
+                            background: hasValidTrack ? "#a1a1aa" : "rgba(255, 255, 255, 0.1)",
                             color: hasValidTrack ? "#000000" : "#94a3b8"
                           }}
                         >
                           {hasValidTrack ? `🟢 트랙 ${trackNoStr} 꽂힘` : `⚪ 트랙 ${trackNoStr} 비어있음`}
                         </span>
-                        <span style={{ fontSize: "12px", fontWeight: "800", color: isCurrentPlaying ? "#e82127" : "#e2e8f0" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "800", color: isCurrentPlaying ? "#a1a1aa" : "#e2e8f0" }}>
                           {sampleTrack.titleKo}
                         </span>
                       </div>
@@ -2312,9 +2388,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "700",
-                            background: isCurrentPlaying ? "#ff4d6d" : "rgba(232, 33, 39, 0.15)",
-                            color: isCurrentPlaying ? "#fff" : "#e82127",
-                            border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #e82127",
+                            background: isCurrentPlaying ? "#ff4d6d" : "rgba(161, 161, 170, 0.15)",
+                            color: isCurrentPlaying ? "#fff" : "#a1a1aa",
+                            border: isCurrentPlaying ? "1px solid #ff4d6d" : "1px solid #a1a1aa",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2330,9 +2406,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "800",
-                            background: "rgba(232, 33, 39, 0.2)",
-                            color: "#e82127",
-                            border: "1px solid #e82127",
+                            background: "rgba(161, 161, 170, 0.2)",
+                            color: "#a1a1aa",
+                            border: "1px solid #a1a1aa",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2359,9 +2435,9 @@ export default function Home() {
                             padding: "4px 8px",
                             fontSize: "11px",
                             fontWeight: "700",
-                            background: copiedPromptId === `m_${trackNum}` ? "#e82127" : "rgba(232, 33, 39, 0.15)",
-                            color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#e82127",
-                            border: "1px solid #e82127",
+                            background: copiedPromptId === `m_${trackNum}` ? "#a1a1aa" : "rgba(161, 161, 170, 0.15)",
+                            color: copiedPromptId === `m_${trackNum}` ? "#fff" : "#a1a1aa",
+                            border: "1px solid #a1a1aa",
                             borderRadius: "4px",
                             cursor: "pointer"
                           }}
@@ -2373,7 +2449,7 @@ export default function Home() {
 
                     {/* Single Track Upload / Status Bar */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.3)", padding: "6px 10px", borderRadius: "6px" }}>
-                      <div style={{ fontSize: "11px", color: customTrack ? "#e82127" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ fontSize: "11px", color: customTrack ? "#a1a1aa" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
                         {customTrack ? (
                           <>
                             <span>🟢 <strong>[업로드 완료]</strong> {customTrack.name}</span>
@@ -2439,9 +2515,9 @@ export default function Home() {
           </div>
 
           {/* SECTION 3.5: Dokkaebi 4K Thumbnail Engine (Full Hybrid Studio) */}
-          <div className="glass-panel" style={{ borderColor: "rgba(232, 33, 39, 0.4)", boxShadow: "0 0 20px rgba(232, 33, 39, 0.15)" }}>
+          <div className="glass-panel" style={{ borderColor: "rgba(161, 161, 170, 0.4)", boxShadow: "0 0 20px rgba(161, 161, 170, 0.15)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "#e82127" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "#a1a1aa" }}>
                 <span>🎨</span> Dokkaebi 4K 썸네일 엔진 (클릭률 1위 후킹 스튜디오)
                 <button
                   type="button"
@@ -2450,9 +2526,9 @@ export default function Home() {
                     padding: "6px 10px",
                     fontSize: "11px",
                     fontWeight: "700",
-                    background: showDokkaebiBadge ? "rgba(232, 33, 39, 0.15)" : "rgba(255, 77, 109, 0.15)",
-                    color: showDokkaebiBadge ? "#e82127" : "#ff4d6d",
-                    border: showDokkaebiBadge ? "1px solid #e82127" : "1px solid #ff4d6d",
+                    background: showDokkaebiBadge ? "rgba(161, 161, 170, 0.15)" : "rgba(255, 77, 109, 0.15)",
+                    color: showDokkaebiBadge ? "#a1a1aa" : "#ff4d6d",
+                    border: showDokkaebiBadge ? "1px solid #a1a1aa" : "1px solid #ff4d6d",
                     borderRadius: "6px",
                     cursor: "pointer",
                     whiteSpace: "nowrap"
@@ -2465,9 +2541,9 @@ export default function Home() {
             </div>
 
             {/* Cute Dokkaebi Mascot AI Image Prompt Generator Box */}
-            <div style={{ background: "rgba(232, 33, 39, 0.1)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "8px", padding: "12px", marginBottom: "14px" }}>
+            <div style={{ background: "rgba(161, 161, 170, 0.1)", border: "1px solid rgba(161, 161, 170, 0.3)", borderRadius: "8px", padding: "12px", marginBottom: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "800", color: "#e82127" }}>
+                <span style={{ fontSize: "12px", fontWeight: "800", color: "#a1a1aa" }}>
                   👹 [4K 시네마틱 썸네일 AI 이미지 프롬프트 - 한글 감성 연출 & 영문 복사]
                 </span>
                 <button
@@ -2480,9 +2556,9 @@ export default function Home() {
                     padding: "5px 12px",
                     fontSize: "11px",
                     fontWeight: "800",
-                    background: "rgba(232, 33, 39, 0.2)",
-                    color: "#e82127",
-                    border: "1px solid #e82127",
+                    background: "rgba(161, 161, 170, 0.2)",
+                    color: "#a1a1aa",
+                    border: "1px solid #a1a1aa",
                     borderRadius: "6px",
                     cursor: "pointer"
                   }}
@@ -2492,7 +2568,7 @@ export default function Home() {
               </div>
 
               {/* Korean Scene Explanation for Director */}
-              <div style={{ fontSize: "11px", color: "#e82127", marginBottom: "6px", fontWeight: "700" }}>
+              <div style={{ fontSize: "11px", color: "#a1a1aa", marginBottom: "6px", fontWeight: "700" }}>
                 🇰🇷 [총감독님 전용 장면 설명]: {topTrendingTheme.title}
               </div>
 
@@ -2508,7 +2584,7 @@ export default function Home() {
                   lineHeight: "1.4",
                   fontFamily: "monospace",
                   background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(232, 33, 39, 0.4)",
+                  border: "1px solid rgba(161, 161, 170, 0.4)",
                   padding: "8px",
                   borderRadius: "6px",
                   resize: "vertical"
@@ -2529,9 +2605,9 @@ export default function Home() {
                   padding: "8px 12px",
                   fontSize: "12px",
                   fontWeight: "700",
-                  background: thumbnailMode === "auto" ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)",
-                  color: thumbnailMode === "auto" ? "#e82127" : "var(--text-secondary)",
-                  border: thumbnailMode === "auto" ? "1px solid #e82127" : "1px solid var(--glass-border)",
+                  background: thumbnailMode === "auto" ? "rgba(161, 161, 170, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: thumbnailMode === "auto" ? "#a1a1aa" : "var(--text-secondary)",
+                  border: thumbnailMode === "auto" ? "1px solid #a1a1aa" : "1px solid var(--glass-border)",
                   borderRadius: "6px",
                   cursor: "pointer"
                 }}
@@ -2567,9 +2643,9 @@ export default function Home() {
                   padding: "8px 12px",
                   fontSize: "12px",
                   fontWeight: "700",
-                  background: thumbnailMode === "ai" ? "rgba(232, 33, 39, 0.2)" : "rgba(0,0,0,0.4)",
-                  color: thumbnailMode === "ai" ? "#e82127" : "var(--text-secondary)",
-                  border: thumbnailMode === "ai" ? "1px solid #e82127" : "1px solid var(--glass-border)",
+                  background: thumbnailMode === "ai" ? "rgba(161, 161, 170, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: thumbnailMode === "ai" ? "#a1a1aa" : "var(--text-secondary)",
+                  border: thumbnailMode === "ai" ? "1px solid #a1a1aa" : "1px solid var(--glass-border)",
                   borderRadius: "6px",
                   cursor: "pointer"
                 }}
@@ -2618,7 +2694,7 @@ export default function Home() {
               aspectRatio: "16/9",
               borderRadius: "10px",
               overflow: "hidden",
-              border: "1.5px solid rgba(232, 33, 39, 0.5)",
+              border: "1.5px solid rgba(161, 161, 170, 0.5)",
               background: "#05030a",
               display: "flex",
               alignItems: "center",
@@ -2649,8 +2725,8 @@ export default function Home() {
                   height: "55px",
                   borderRadius: "50%",
                   overflow: "hidden",
-                  border: "2px solid #e82127",
-                  boxShadow: "0 0 12px rgba(232, 33, 39, 0.7), inset 0 0 8px rgba(232, 33, 39, 0.5)",
+                  border: "2px solid #a1a1aa",
+                  boxShadow: "0 0 12px rgba(161, 161, 170, 0.7), inset 0 0 8px rgba(161, 161, 170, 0.5)",
                   background: "rgba(10, 6, 18, 0.95)",
                   zIndex: 4
                 }}>
@@ -2667,7 +2743,7 @@ export default function Home() {
                 position: "absolute",
                 bottom: "12px",
                 left: "12px",
-                background: "linear-gradient(90deg, #e82127 0%, #e82127 100%)",
+                background: "linear-gradient(90deg, #a1a1aa 0%, #a1a1aa 100%)",
                 padding: "6px 14px",
                 borderRadius: "6px",
                 color: "#000",
@@ -2710,15 +2786,15 @@ export default function Home() {
                   gap: "10px",
                   zIndex: 10
                 }}>
-                  <div style={{ width: "32px", height: "32px", border: "3px solid #e82127", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                  <span style={{ color: "#e82127", fontSize: "13px", fontWeight: "700" }}>🤖 Generating 4K Dokkaebi Thumbnail...</span>
+                  <div style={{ width: "32px", height: "32px", border: "3px solid #a1a1aa", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "700" }}>🤖 Generating 4K Dokkaebi Thumbnail...</span>
                 </div>
               )}
             </div>
 
             {/* Permanent Global American Audience Directive Box */}
-            <div style={{ background: "rgba(232, 33, 39, 0.06)", border: "1px solid rgba(232, 33, 39, 0.3)", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: "#e82127" }}>
+            <div style={{ background: "rgba(161, 161, 170, 0.06)", border: "1px solid rgba(161, 161, 170, 0.3)", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div style={{ fontSize: "12px", fontWeight: "800", color: "#a1a1aa" }}>
                 🌐 GLOBAL AMERICAN AUDIENCE DIRECTIVE (100% Native English System)
               </div>
               <div style={{ fontSize: "11px", color: "#aaa", lineHeight: "1.5" }}>
@@ -2800,9 +2876,9 @@ export default function Home() {
                           fontSize: "11px",
                           fontWeight: "700",
                           borderRadius: "6px",
-                          border: eqColor === col.id ? "1px solid #e82127" : "1px solid rgba(255,255,255,0.15)",
-                          background: eqColor === col.id ? "rgba(232, 33, 39,0.2)" : "rgba(0,0,0,0.4)",
-                          color: eqColor === col.id ? "#e82127" : "#aaa",
+                          border: eqColor === col.id ? "1px solid #a1a1aa" : "1px solid rgba(255,255,255,0.15)",
+                          background: eqColor === col.id ? "rgba(161, 161, 170,0.2)" : "rgba(0,0,0,0.4)",
+                          color: eqColor === col.id ? "#a1a1aa" : "#aaa",
                           cursor: "pointer"
                         }}
                       >
@@ -2825,7 +2901,7 @@ export default function Home() {
                   { key: "neonDokkaebi", state: enableNeonDokkaebi, setter: setEnableNeonDokkaebi, label: "👹 오디오 반응형 네온 도깨비 스티커" }
                 ].map(opt => (
                   <div key={opt.key} style={{ background: "rgba(0,0,0,0.3)", padding: "10px", borderRadius: "8px", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: opt.state ? "#e82127" : "#aaa", cursor: "pointer" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: opt.state ? "#a1a1aa" : "#aaa", cursor: "pointer" }}>
                       <input type="checkbox" checked={opt.state} onChange={(e) => opt.setter(e.target.checked)} />
                       <span>{opt.label}</span>
                     </label>
@@ -2870,9 +2946,9 @@ export default function Home() {
                     padding: "4px 10px",
                     fontSize: "11px",
                     fontWeight: "800",
-                    background: "rgba(232, 33, 39, 0.2)",
-                    color: "#e82127",
-                    border: "1px solid #e82127",
+                    background: "rgba(161, 161, 170, 0.2)",
+                    color: "#a1a1aa",
+                    border: "1px solid #a1a1aa",
                     borderRadius: "6px",
                     cursor: "pointer"
                   }}
@@ -2899,12 +2975,12 @@ export default function Home() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12px", color: "#e82127", marginBottom: "4px", fontWeight: "700" }}>📌 첫 번째 도깨비 영문 고정 댓글 (Pinned Comment):</label>
+                <label style={{ display: "block", fontSize: "12px", color: "#a1a1aa", marginBottom: "4px", fontWeight: "700" }}>📌 첫 번째 도깨비 영문 고정 댓글 (Pinned Comment):</label>
                 <input 
                   type="text" 
                   value={pinnedComment} 
                   onChange={(e) => setPinnedComment(e.target.value)}
-                  style={{ width: "100%", color: "#e82127", border: "1px solid rgba(232, 33, 39, 0.4)", background: "#05030a", padding: "8px", borderRadius: "6px", fontSize: "12px" }}
+                  style={{ width: "100%", color: "#a1a1aa", border: "1px solid rgba(161, 161, 170, 0.4)", background: "#05030a", padding: "8px", borderRadius: "6px", fontSize: "12px" }}
                 />
               </div>
 
@@ -2935,9 +3011,27 @@ export default function Home() {
             </div>
             
             <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-              내 PC 리소스를 사용하지 않고 구글 캐글 GPU로 AI 비디오를 안전하게 생성합니다. 
-              세션이 끊기기 전에 다운로드 혹은 구글 드라이브로 파일을 이송해 보관하세요.
+              내 PC 리소스를 사용하지 않고 구글 캐글 GPU로 AI 비디오를 안전하게 생성합니다.
             </p>
+
+            {/* 📊 Kaggle GPU Remaining Capacity Gauge */}
+            {(() => {
+              const totalSecs = typeof kaggleRemainingSeconds === "number" ? kaggleRemainingSeconds : 108000;
+              const hours = Math.floor(totalSecs / 3600);
+              const minutes = Math.floor((totalSecs % 3600) / 60);
+              const pct = ((totalSecs / 108000) * 100).toFixed(1);
+              return (
+                <div style={{ padding: "10px", background: "rgba(0, 0, 0, 0.3)", borderRadius: "8px", border: "1px solid var(--glass-border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--text-secondary)", marginBottom: "4px" }}>
+                    <span>📊 이번 주 남은 GPU 시간:</span>
+                    <span style={{ fontWeight: "800", color: "var(--text-primary)" }}>{hours}시간 {minutes}분 ({pct}%)</span>
+                  </div>
+                  <div style={{ width: "100%", height: "6px", background: "var(--bg-tertiary)", borderRadius: "3px", overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: "var(--text-primary)", transition: "width 0.5s ease-out" }} />
+                  </div>
+                </div>
+              );
+            })()}
 
             <button 
               type="button"
@@ -2952,9 +3046,9 @@ export default function Home() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "rgba(232, 33, 39, 0.1)",
-                color: "var(--accent-red)",
-                border: "1px solid rgba(232, 33, 39, 0.2)"
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--glass-border)"
               }}
             >
               🌋 캐글 5초 가입 및 세팅 가이드 열기
@@ -2962,24 +3056,27 @@ export default function Home() {
           </div>
 
           {/* Render Action Control Panel (Moved to Right Column directly above console) */}
-          <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "12px", border: "1px solid var(--glass-border)", boxShadow: "0 0 20px rgba(232, 33, 39, 0.15)" }}>
+          <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "12px", border: "1px solid var(--glass-border)", boxShadow: "0 0 20px rgba(161, 161, 170, 0.15)" }}>
             <h2 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
               🚀 3단계: 비디오 렌더링 & 숏츠 일괄 생성 제어 센터
             </h2>
 
             {/* Render Action Button */}
             <button 
-              className="btn-primary pulse-glow-box" 
+              className="btn-primary" 
               onClick={() => requestQuotaApproval(
                 `서울 로파이 ${targetDurationHours}시간 비디오 렌더링`,
                 "약 0원 (PC 로컬 자원 렌더링)",
                 handleStartRender
               )}
               disabled={isRendering}
-              style={{ padding: "16px", fontSize: "18px", width: "100%", justifyContent: "center", display: "flex" }}
+              style={{ padding: "12px", fontSize: "14px", width: "100%", justifyContent: "center", display: "flex" }}
             >
-              {isRendering ? "🎥 Synthesizing Audio & Video..." : "🚀 3단계: 최종 1~3시간 로파이 비디오 렌더링 시작"}
+              {isRendering ? "🎥 Synthesizing Audio & Video..." : "🚀 3단계: 최종 비디오 렌더링"}
             </button>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", textAlign: "center", marginTop: "-4px", marginBottom: "8px" }}>
+              Kaggle GPU 엔진을 원격 구동하여 1~3시간 분량 영상을 합성합니다.
+            </div>
 
             {/* 📱 20-Track Batch YouTube Shorts Auto Generator & Sequential Uploader */}
             <button 
@@ -2989,7 +3086,7 @@ export default function Home() {
                 alert("📱 [도깨비 20곡 숏츠 20개 일괄 생성 & 20일 자동 순차 업로드 알고리즘 가동!]\n\n20개 음원 곡별로 각각 60초 9:16 세로 숏츠 비디오 20개가 1초 만에 자동 생성되었습니다!\n\n유튜브 API를 통해 Day 01 ~ Day 20까지 하루 1개씩 20일간 자동 예약/순차 업로드가 완료됩니다!\n\n#Shorts #Dokkaebi #GayageumLofi 태그 자동 포함!");
               }}
               style={{
-                padding: "14px",
+                padding: "12px",
                 fontSize: "14px",
                 fontWeight: "800",
                 width: "100%",
@@ -2997,16 +3094,17 @@ export default function Home() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "linear-gradient(90deg, #ff007f 0%, #e82127 100%)",
-                border: "1px solid #e82127",
+                background: "linear-gradient(90deg, #52525b 0%, #a1a1aa 100%)",
+                border: "1px solid #a1a1aa",
                 color: "#000",
-                boxShadow: "0 0 20px rgba(232, 33, 39, 0.5)",
                 cursor: "pointer"
               }}
             >
-              <span>📱🔥</span>
-              <span>20곡 숏츠 20개 일괄 생성 & 20일 자동 순차 게시 엔진</span>
+              <span>📱 숏츠 20개 일괄 생성</span>
             </button>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)", textAlign: "center", marginTop: "-4px" }}>
+              20곡 개별 숏츠 비디오를 생성하고 20일 동안 순차적으로 게시합니다.
+            </div>
           </div>
 
           {/* Terminal Console */}
@@ -3026,7 +3124,7 @@ export default function Home() {
               padding: "12px",
               fontFamily: "var(--font-mono)",
               fontSize: "12px",
-              color: "#e82127",
+              color: "#a1a1aa",
               overflowY: "auto",
               whiteSpace: "pre-wrap",
               marginBottom: "12px"
@@ -3062,15 +3160,15 @@ export default function Home() {
 
             {/* Friendly Step-by-Step Connection Guide Box */}
             <div style={{
-              background: "rgba(232, 33, 39, 0.08)",
-              border: "1px solid rgba(232, 33, 39, 0.3)",
+              background: "rgba(161, 161, 170, 0.08)",
+              border: "1px solid rgba(161, 161, 170, 0.3)",
               borderRadius: "8px",
               padding: "12px 16px",
               marginBottom: "16px",
               fontSize: "12px",
               color: "#e2e8f0"
             }}>
-              <div style={{ fontWeight: "800", color: "#e82127", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ fontWeight: "800", color: "#a1a1aa", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
                 <span>📖 3초 만에 끝나는 초간단 유튜브 채널 연동 3단계</span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
@@ -3187,8 +3285,8 @@ export default function Home() {
             return (
               <div style={{
                 background: "#0d0914",
-                border: "2px solid #e82127",
-                boxShadow: "0 0 30px rgba(232, 33, 39, 0.6)",
+                border: "2px solid #a1a1aa",
+                boxShadow: "0 0 30px rgba(161, 161, 170, 0.6)",
                 borderRadius: "16px",
                 width: "100%",
                 maxWidth: "650px",
@@ -3198,8 +3296,8 @@ export default function Home() {
                 gap: "16px",
                 color: "#ffffff"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(232, 33, 39, 0.3)", pb: "12px" }}>
-                  <span style={{ fontSize: "16px", fontWeight: "900", color: "#e82127", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(161, 161, 170, 0.3)", pb: "12px" }}>
+                  <span style={{ fontSize: "16px", fontWeight: "900", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "8px" }}>
                     🔍 [한글 연출 확인 및 수정] - {sampleTrack.titleKo}
                   </span>
                   <button
@@ -3216,7 +3314,7 @@ export default function Home() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ fontSize: "13px", fontWeight: "800", color: "#e82127" }}>
+                  <label style={{ fontSize: "13px", fontWeight: "800", color: "#a1a1aa" }}>
                     ✍️ 한글 연출 텍스트 (자유롭게 수정 가능):
                   </label>
                   <textarea
@@ -3231,7 +3329,7 @@ export default function Home() {
                       padding: "12px",
                       borderRadius: "8px",
                       background: "rgba(0,0,0,0.6)",
-                      border: "1px solid rgba(232, 33, 39, 0.4)",
+                      border: "1px solid rgba(161, 161, 170, 0.4)",
                       color: "#ffffff",
                       fontSize: "13px",
                       lineHeight: "1.5",
@@ -3276,13 +3374,13 @@ export default function Home() {
                     style={{
                       padding: "8px 24px",
                       borderRadius: "6px",
-                      background: "linear-gradient(135deg, #e82127 0%, #e82127 100%)",
+                      background: "linear-gradient(135deg, #a1a1aa 0%, #a1a1aa 100%)",
                       color: "#000000",
                       border: "none",
                       cursor: "pointer",
                       fontSize: "13px",
                       fontWeight: "900",
-                      boxShadow: "0 0 15px rgba(232, 33, 39, 0.6)"
+                      boxShadow: "0 0 15px rgba(161, 161, 170, 0.6)"
                     }}
                   >
                     ✅ [확정]
@@ -3344,7 +3442,7 @@ export default function Home() {
             <div style={{ display: "flex", flexDirection: "column", gap: "18px", textAlign: "left", fontSize: "14px", color: "#e2e8f0" }}>
               {/* Step 1 */}
               <div style={{ display: "flex", gap: "12px" }}>
-                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>1</span>
+                <span style={{ background: "var(--text-secondary)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>1</span>
                 <div>
                   <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>캐글 회원가입 (5초 소요)</div>
                   <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>
@@ -3364,7 +3462,7 @@ export default function Home() {
 
               {/* Step 2 */}
               <div style={{ display: "flex", gap: "12px" }}>
-                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>2</span>
+                <span style={{ background: "var(--text-secondary)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>2</span>
                 <div>
                   <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>무료 GPU(주당 30시간) 활성화</div>
                   <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
@@ -3375,7 +3473,7 @@ export default function Home() {
 
               {/* Step 3 */}
               <div style={{ display: "flex", gap: "12px" }}>
-                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>3</span>
+                <span style={{ background: "var(--text-secondary)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>3</span>
                 <div>
                   <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>노트북 복제 & 구동</div>
                   <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>
@@ -3395,7 +3493,7 @@ export default function Home() {
 
               {/* Step 4 */}
               <div style={{ display: "flex", gap: "12px" }}>
-                <span style={{ background: "var(--accent-red)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>4</span>
+                <span style={{ background: "var(--text-secondary)", color: "#ffffff", width: "24px", height: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "800", flexShrink: 0 }}>4</span>
                 <div>
                   <div style={{ fontWeight: "700", color: "#ffffff", marginBottom: "4px" }}>완성물 다운로드 & 스튜디오 보관</div>
                   <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
