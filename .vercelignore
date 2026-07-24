@@ -1,0 +1,15 @@
+.next
+node_modules
+.git
+output/
+public/*.mp4
+public/*.webm
+public/rendered/
+public/videos/
+*.mp4
+*.mkv
+*.mov
+*.zip
+*.tar
+*.gz
+dev-server.log

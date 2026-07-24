@@ -1,0 +1,69 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+
+# custom studio outputs & logs
+/output/
+*.log
+.env.local
+
+# credentials
+google_service_account.json
+tokens.json
+
+# Local configurations / batch launchers
+/*.bat
+/create_bat.js
+/create_perfect_launcher.js
+/create_shortcut.ps1
+/make_shortcut.vbs
+
+# Local test and helper scripts containing API keys
+/test_*.js
+/list_*.js
+/download_*.js
+/fetch_*.js
+/render_*.js
+/write_*.py
+/start_*.js
+/create_perfect_launcher.js
