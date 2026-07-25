@@ -78,6 +78,8 @@
 - **새로운 정상 작동 API 키 연동 완료:** 총감독님이 새로 발급하여 복사하신 클립보드 내 정상 API 키(`AQ.Ab8RN6...`)를 안전하게 감지하여 `GEMINI_API_KEY`에 갱신하고, 기존 만료된 키는 `GEMINI_API_KEY_BACKUP`으로 전환. 연결성 테스트 결과 새 키는 정상 작동('Success: OK') 및 기존 만료 키는 대기 상태임을 확인.
 - **이중 API 키 100% 정상 가동 확인 완료:** 1번 기본 키와 2번 예비 키(`GEMINI_API_KEY_BACKUP`에 새로 복사된 `AQ.Ab8RN6Ij...`) 모두 발급 즉시 연동 완료. 연결성 테스트 결과 1번과 2번 키 모두 각각 정상 응답('Success: OK')을 수신하여 완벽한 무중단 실시간 롤오버 방어막 구축을 완료.
 - **오직 유튜브 중심의 수익화 및 큐레이션 전략 수립:** 외부 스트리밍 플랫폼(멜론 등)을 전면 배제하고, 목적형 상황(Context) 태깅 타겟팅 및 BPM 70-90의 사운드 일관성 수립을 뼈대로 삼는 '유튜브 알고리즘 및 수익화 전략 가이드북(YOUTUBE_LOFI_STRATEGY.md)'을 단독 구축 완료.
+- **Vercel 운영 배포 및 API 연동 라이브 테스트 완료:** 커밋 푸시 후 Vercel CLI로 Production 환경 변수(`GEMINI_API_KEY`, `GEMINI_API_KEY_BACKUP`)를 신규 및 덮어쓰기 설정 완료. 실시간 빌드 배포 후 `https://seoul-lofi-studio.vercel.app/api/status` 라이브 호출 검증을 거쳐 에러 없이 `status: ok` 연결 성공 확인 완료.
+
 
 
 ---

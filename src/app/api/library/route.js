@@ -7,7 +7,11 @@ export async function GET() {
   const libraryPath = path.join(outputDir, "library.json");
 
   if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+    try {
+      fs.mkdirSync(outputDir, { recursive: true });
+    } catch (e) {
+      console.warn("Failed to create outputDir on read-only system:", e.message);
+    }
   }
 
   let library = [];
@@ -21,7 +25,7 @@ export async function GET() {
 
   // Auto-scan physical .mp4 files in output folder to populate library
   try {
-    const files = fs.readdirSync(outputDir);
+    const files = fs.existsSync(outputDir) ? fs.readdirSync(outputDir) : [];
     let updated = false;
 
     files.forEach((file) => {
@@ -44,7 +48,11 @@ export async function GET() {
     });
 
     if (updated) {
-      fs.writeFileSync(libraryPath, JSON.stringify(library, null, 2), "utf-8");
+      try {
+        fs.writeFileSync(libraryPath, JSON.stringify(library, null, 2), "utf-8");
+      } catch (e) {
+        console.warn("Failed to write library.json on read-only system:", e.message);
+      }
     }
   } catch (e) {
     console.error("Failed to auto-sync MP4 files to library:", e);

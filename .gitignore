@@ -43,8 +43,11 @@ next-env.d.ts
 .vercel
 
 # custom studio outputs & logs
-/output/
-*.log
+/output/*.mp4
+/output/temp/
+/output/status.json
+/output/status_*.json
+/*.log
 .env.local
 
 # credentials

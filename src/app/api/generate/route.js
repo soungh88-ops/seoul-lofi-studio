@@ -58,14 +58,20 @@ export async function POST(request) {
 
   // 1. Ensure directories exist
   [outputDir, tempDir, publicAudioDir].forEach((dir) => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    try {
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    } catch (e) {
+      console.warn("Failed to create folder on read-only system:", e.message);
+    }
   });
 
   // 2. Clear any old status file to prepare for new render
   if (fs.existsSync(statusPath)) {
     try {
       fs.unlinkSync(statusPath);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to delete status file on read-only system:", e.message);
+    }
   }
 
   // 3. Parse parameters
