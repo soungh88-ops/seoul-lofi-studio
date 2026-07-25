@@ -4,8 +4,35 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
  * Helper to call Gemini for text and SEO generation
  */
 class GeminiHelper {
+  constructor() {
+    this.activeKeyIndex = 0;
+  }
+
+  getApiKeys() {
+    const keys = [];
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "your_gemini_api_key_here") {
+      keys.push(process.env.GEMINI_API_KEY);
+    }
+    if (process.env.GEMINI_API_KEY_BACKUP && process.env.GEMINI_API_KEY_BACKUP !== "your_gemini_api_key_backup_here") {
+      keys.push(process.env.GEMINI_API_KEY_BACKUP);
+    }
+    return keys.length > 0 ? keys : ["your_gemini_api_key_here"];
+  }
+
+  getActiveApiKey() {
+    const keys = this.getApiKeys();
+    const index = this.activeKeyIndex % keys.length;
+    return keys[index];
+  }
+
+  rotateKey() {
+    const keys = this.getApiKeys();
+    this.activeKeyIndex = (this.activeKeyIndex + 1) % keys.length;
+    console.log(`[Gemini API Key Rotated] Active key index is now: ${this.activeKeyIndex}`);
+  }
+
   getGenAI() {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = this.getActiveApiKey();
     if (apiKey && apiKey !== "your_gemini_api_key_here") {
       return new GoogleGenerativeAI(apiKey);
     }
@@ -17,10 +44,35 @@ class GeminiHelper {
   }
 
   /**
+   * Helper to run a generation block with automatic key rotation and retries
+   */
+  async runWithRetry(fn, fallback = null) {
+    const keys = this.getApiKeys();
+    let lastError = null;
+    for (let attempt = 0; attempt < keys.length; attempt++) {
+      try {
+        const genAI = this.getGenAI();
+        if (!genAI) {
+          throw new Error("Gemini AI client not configured.");
+        }
+        return await fn(genAI);
+      } catch (err) {
+        lastError = err;
+        console.warn(`[Gemini execution failed with key index ${this.activeKeyIndex}]:`, err.message || err);
+        // Rotate key and try again if we have more keys
+        this.rotateKey();
+      }
+    }
+    // If all keys fail, return the fallback if provided, or throw
+    if (fallback) return fallback;
+    throw lastError;
+  }
+
+  /**
    * Dynamically query Google's ListModels API to get the exact working model for this API key.
    */
   async getWorkingGenerativeModel(genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = this.getActiveApiKey();
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
       if (res.ok) {
@@ -46,12 +98,7 @@ class GeminiHelper {
    * Generates SEO-optimized YouTube Title, Description, and Tags based on the selected theme for Global English Audiences.
    */
   async generateMetadata({ genre, theme, trackCount = 20, durationHours = 1 }) {
-    const genAI = this.getGenAI();
-    if (!genAI) {
-      return this.getMockMetadata(genre, theme, trackCount, durationHours);
-    }
-
-    try {
+    return this.runWithRetry(async (genAI) => {
       const model = await this.getWorkingGenerativeModel(genAI);
       
       const prompt = `
@@ -91,22 +138,14 @@ Breathe deep, and let go. As long as you remain here, you are under the Dokkaebi
       const text = response.text().trim();
       const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
       return JSON.parse(cleanJson);
-    } catch (error) {
-      console.error("Gemini metadata generation failed:", error);
-      return this.getMockMetadata(genre, theme, trackCount, durationHours);
-    }
+    }, this.getMockMetadata(genre, theme, trackCount, durationHours));
   }
 
   /**
    * Generates custom prompts for MusicFX
    */
   async generateMusicPrompts({ genre, theme, trackCount = 20 }) {
-    const genAI = this.getGenAI();
-    if (!genAI) {
-      return this.getMockMusicPrompts(genre, theme, trackCount);
-    }
-
-    try {
+    return this.runWithRetry(async (genAI) => {
       const model = await this.getWorkingGenerativeModel(genAI);
       
       const prompt = `
@@ -120,59 +159,48 @@ Breathe deep, and let go. As long as you remain here, you are under the Dokkaebi
       const text = response.text().trim();
       const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
       return JSON.parse(cleanJson);
-    } catch (error) {
-      console.error("Gemini music prompt generation failed:", error);
-      return this.getMockMusicPrompts(genre, theme, trackCount);
-    }
+    }, this.getMockMusicPrompts(genre, theme, trackCount));
   }
 
   /**
    * Generates 5 distinct visual prompts dynamically based on the input topic.
    */
   async generateImageCandidates({ topic, modelName }) {
-    const genAI = this.getGenAI();
+    return this.runWithRetry(async (genAI) => {
+      const model = modelName
+        ? genAI.getGenerativeModel({ model: modelName })
+        : await this.getWorkingGenerativeModel(genAI);
 
-    if (genAI) {
-      try {
-        const model = modelName
-          ? genAI.getGenerativeModel({ model: modelName })
-          : await this.getWorkingGenerativeModel(genAI);
-
-        const promptText = `
-          Generate 5 distinct, highly aesthetic lofi visual concept candidates for topic "${topic}".
-          Return JSON object with key "candidates" array. Each item:
-          {
-            "id": 1,
-            "title": "후보 1: [Short Korean scene title related to ${topic}]",
-            "prompt": "[Detailed Korean description of scene related to ${topic}]",
-            "promptEn": "[Detailed English visual prompt for Imagen 3: lighting, mood, 4k lofi aesthetic, related to ${topic}]"
-          }
-          Output ONLY valid raw JSON without markdown.
-        `;
-
-        const result = await model.generateContent(promptText);
-        const response = await result.response;
-        const text = response.text().trim();
-
-        const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
-        const parsed = JSON.parse(cleanJson);
-
-        if (parsed.candidates && parsed.candidates.length > 0) {
-          const candidates = parsed.candidates.map((c, idx) => ({
-            id: c.id || idx + 1,
-            title: c.title || `후보 ${idx + 1}: ${topic} 감성 씬`,
-            prompt: c.prompt || `${topic} 분위기의 차분한 4K 로파이 장면`,
-            promptEn: c.promptEn || `${topic} Korean lofi anime aesthetic 4k cinematic`
-          }));
-          return { candidates };
+      const promptText = `
+        Generate 5 distinct, highly aesthetic lofi visual concept candidates for topic "${topic}".
+        Return JSON object with key "candidates" array. Each item:
+        {
+          "id": 1,
+          "title": "후보 1: [Short Korean scene title related to ${topic}]",
+          "prompt": "[Detailed Korean description of scene related to ${topic}]",
+          "promptEn": "[Detailed English visual prompt for Imagen 3: lighting, mood, 4k lofi aesthetic, related to ${topic}]"
         }
-      } catch (error) {
-        console.warn("[gemini dynamic model prompt error]:", error.message);
-      }
-    }
+        Output ONLY valid raw JSON without markdown.
+      `;
 
-    // Dynamic Fallback: Uses input topic to generate customized prompts even if API fails
-    return this.getMockImageCandidates(topic);
+      const result = await model.generateContent(promptText);
+      const response = await result.response;
+      const text = response.text().trim();
+
+      const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
+      const parsed = JSON.parse(cleanJson);
+
+      if (parsed.candidates && parsed.candidates.length > 0) {
+        const candidates = parsed.candidates.map((c, idx) => ({
+          id: c.id || idx + 1,
+          title: c.title || `후보 ${idx + 1}: ${topic} 감성 씬`,
+          prompt: c.prompt || `${topic} 분위기의 차분한 4K 로파이 장면`,
+          promptEn: c.promptEn || `${topic} Korean lofi anime aesthetic 4k cinematic`
+        }));
+        return { candidates };
+      }
+      throw new Error("Invalid candidates format from Gemini");
+    }, this.getMockImageCandidates(topic));
   }
 
   getMockImageCandidates(topic = "서울 밤거리 로파이") {

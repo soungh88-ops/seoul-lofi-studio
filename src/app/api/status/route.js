@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+const geminiHelper = require("@/utils/gemini");
 
 /**
  * 100% Working free-tier models verified for user's Gemini Key
@@ -25,9 +26,10 @@ export async function GET(request) {
   };
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKeys = geminiHelper.getApiKeys();
+    const firstKey = apiKeys[0];
 
-    if (!apiKey || apiKey === "your_gemini_api_key_here") {
+    if (!firstKey || firstKey === "your_gemini_api_key_here") {
       return NextResponse.json(
         { status: "error", message: "GEMINI_API_KEY가 서버에 등록되지 않았습니다." },
         { status: 500, headers }
@@ -37,61 +39,91 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const chosenModel = searchParams.get("model");
 
-    // Mode 2: Test direct REST ping connection
+    // Mode 2: Test direct REST ping connection with automatic key rotation on failure
     if (chosenModel) {
       const cleanModelId = chosenModel.replace(/^models\//, "");
+      let lastError = null;
 
-      const pingRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${cleanModelId}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: "hi" }] }]
-          })
+      for (let attempt = 0; attempt < apiKeys.length; attempt++) {
+        const apiKey = geminiHelper.getActiveApiKey();
+        try {
+          const pingRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${cleanModelId}:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: "hi" }] }]
+              })
+            }
+          );
+
+          const pingJson = await pingRes.json();
+
+          if (pingRes.ok) {
+            return NextResponse.json({
+              status: "ok",
+              connectedModel: cleanModelId,
+              message: `Google Gemini (${cleanModelId}) 모델 연결 성공! (Key Index: ${geminiHelper.activeKeyIndex})`,
+              models: VERIFIED_WORKING_MODELS
+            }, { headers });
+          }
+
+          lastError = pingJson?.error?.message || pingRes.statusText;
+          // If quota limit (429) or other auth errors, rotate key and try again
+          console.warn(`[Gemini Status Ping failed with key index ${geminiHelper.activeKeyIndex}]: ${lastError}`);
+          geminiHelper.rotateKey();
+        } catch (err) {
+          lastError = err.message;
+          console.warn(`[Gemini Status Ping fetch error with key index ${geminiHelper.activeKeyIndex}]: ${err.message}`);
+          geminiHelper.rotateKey();
         }
-      );
-
-      const pingJson = await pingRes.json();
-
-      if (pingRes.ok) {
-        return NextResponse.json({
-          status: "ok",
-          connectedModel: cleanModelId,
-          message: `Google Gemini (${cleanModelId}) 모델 연결 성공!`,
-          models: VERIFIED_WORKING_MODELS
-        }, { headers });
-      } else {
-        return NextResponse.json(
-          { 
-            status: "error", 
-            message: `[${cleanModelId}] 연결 실패: ${pingJson?.error?.message || pingRes.statusText}` 
-          },
-          { status: 400, headers }
-        );
       }
+
+      return NextResponse.json(
+        { 
+          status: "error", 
+          message: `[${cleanModelId}] 연결 실패: ${lastError}` 
+        },
+        { status: 400, headers }
+      );
     }
 
-    // Mode 1: Fetch all models from Google & merge with verified working models
+    // Mode 1: Fetch all models from Google & merge with verified working models (with automatic key rotation retry)
     let googleModels = [];
-    try {
-      const listModelsRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=100`,
-        { cache: "no-store" }
-      );
-      if (listModelsRes.ok) {
-        const listData = await listModelsRes.json();
-        googleModels = (listData?.models || [])
-          .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-          .map(m => ({
-            id: m.name.replace(/^models\//, ""),
-            fullName: m.name,
-            displayName: m.displayName || m.name.replace(/^models\//, ""),
-            description: m.description || ""
-          }));
+    let listModelsSuccess = false;
+    let listModelsError = null;
+
+    for (let attempt = 0; attempt < apiKeys.length; attempt++) {
+      const apiKey = geminiHelper.getActiveApiKey();
+      try {
+        const listModelsRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=100`,
+          { cache: "no-store" }
+        );
+        if (listModelsRes.ok) {
+          const listData = await listModelsRes.json();
+          googleModels = (listData?.models || [])
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
+            .map(m => ({
+              id: m.name.replace(/^models\//, ""),
+              fullName: m.name,
+              displayName: m.displayName || m.name.replace(/^models\//, ""),
+              description: m.description || ""
+            }));
+          listModelsSuccess = true;
+          break;
+        } else {
+          const errData = await listModelsRes.json().catch(() => ({}));
+          listModelsError = errData?.error?.message || listModelsRes.statusText;
+          console.warn(`[Gemini ListModels failed with key index ${geminiHelper.activeKeyIndex}]: ${listModelsError}`);
+          geminiHelper.rotateKey();
+        }
+      } catch (e) {
+        listModelsError = e.message;
+        console.warn(`[Gemini ListModels fetch error with key index ${geminiHelper.activeKeyIndex}]: ${e.message}`);
+        geminiHelper.rotateKey();
       }
-    } catch (e) {
-      console.warn("Failed to fetch full model list:", e);
     }
 
     // Combine verified models first, then other Google models
@@ -105,7 +137,8 @@ export async function GET(request) {
     return NextResponse.json({
       status: "list",
       models: combinedModels,
-      defaultModel: "gemini-3.5-flash"
+      defaultModel: "gemini-3.5-flash",
+      listModelsError: listModelsSuccess ? null : listModelsError
     }, { headers });
   } catch (error) {
     console.error("[API Status Error]", error);

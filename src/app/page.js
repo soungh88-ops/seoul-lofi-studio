@@ -30,24 +30,24 @@ export default function Home() {
   const [visualPrompts, setVisualPrompts] = useState([
     {
       id: 1,
-      title: "후보 1: [레트로 한국 찜질방 휴게실 양머리 수면 힐링 8초 루프]",
-      prompt: "흰색 한국 찜질방 양머리 수건을 머리에 쓰고 편안한 찜질방 옷을 입은 귀여운 한국 여성 캐릭터가 포근한 전통 찜질방 휴게실 나무 바닥에 편안히 앉아 있는 2D 로파이 애니메이션 연출 4K",
-      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime illustration style, Studio Ghibli aesthetic, a cute modern Korean young adult woman wearing comfortable Korean sauna clothes (jjimjilbang uniform) and an iconic white Korean sauna sheep-folded towel hat (yangmeori) made from a rolled bath towel on head, sitting comfortably on a warm wooden floor in a cozy traditional Korean jjimjilbang REST LOUNGE, beside her is sweet rice drink (sikhye) in a plastic cup with a straw, baked brown eggs on a wooden tray, character completely still in peaceful resting pose, clean 4k, NO sweat, NO steam, NO smoke, perfect repeating loop",
-      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime animation style, Studio Ghibli inspired, a cute modern Korean young adult woman wearing comfortable Korean sauna clothes (jjimjilbang uniform) and white sheep-folded towel hat (yangmeori) on head, sitting comfortably on a warm wooden floor in a cozy traditional Korean jjimjilbang REST LOUNGE, beside her is sweet rice drink (sikhye) with straw, baked brown eggs, character completely still, ambient warm lighting, clean 4k, NO sweat, smooth animation, perfect repeating loop",
-      promptKoTranslation: "• A seamless 8-second video loop: 끊김 없는 8초 무한 반복 로파이 애니메이션 영상\n• static locked-off camera, NO camera movement, NO zoom: 삼각대 고정 카메라, 이동/줌 절대 없음\n• cozy 2D lofi anime style: 따뜻한 지브리 스타일 2D 로파이 일러스트 아트\n• a cute modern Korean young adult woman in sauna clothes wearing yangmeori: 찜질방 옷과 양머리 수건을 쓴 귀여운 한국 여성 캐릭터\n• sitting in jjimjilbang REST LOUNGE with sikhye and eggs: 포근한 찜질방 휴게실에 앉아 식혜와 맥반석 계란 소품\n• 4k resolution, perfect repeating loop: 4K 고해상도, 완벽한 루프",
-      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, Studio Ghibli aesthetic, digital artwork, an iconic cute modern Korean young adult woman wearing comfortable Korean sauna clothes and white sheep-folded towel hat (yangmeori) on head, sitting in a cozy traditional Korean jjimjilbang REST LOUNGE, with sweet rice drink (sikhye) and baked brown eggs, vibrant cozy aesthetic, ultra detailed, cinematic warm lighting, masterwork.",
-      thumbKoTranslation: "• High resolution YouTube thumbnail, --ar 16:9 --v 6.0: 미드저니 v6.0 유튜브 썸네일 전용 포맷\n• cozy 2D lofi anime illustration style: 감성 2D 로파이 일러스트 아티스틱 스타일\n• wearing comfortable sauna clothes and yangmeori: 찜질방 옷과 양머리 수건을 쓴 귀여운 캐릭터",
+      title: "후보 1: [사이버 도깨비 네온 한옥 스튜디오 딥 스터디 8초 루프]",
+      prompt: "어두운 밤, 청색 형광빛 뿔이 빛나는 귀여운 2D 애니메이션 스타일의 사이버 도깨비가 전통 한옥 스튜디오 책상에 앉아 노트북으로 공부하는 로파이 연출 4K",
+      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime illustration style, Studio Ghibli inspired, a cute humanoid cyber-folklore Dokkaebi (Korean goblin) with two small glowing cyan horns on head, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing in a notebook under a warm glowing desk lamp, on the desk is a steaming cup of coffee and a small cute cat sleeping beside the laptop, through the window behind him is the beautiful night view of Namsan Tower and Seoul city lights, character completely still in peaceful study pose, warm ambient lighting, clean 4k, smooth repeating loop",
+      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, cozy 2D lofi anime animation style, Ghibli aesthetic, a cute humanoid cyber-folklore Dokkaebi with glowing cyan horns, sitting at a wooden desk in a cozy Korean hanok studio, writing under a desk lamp, steaming coffee, sleeping cat, Namsan Tower night view through the window, ambient warm lighting, clean 4k, smooth repeating loop",
+      promptKoTranslation: "• A seamless 8-second video loop: 끊김 없는 8초 무한 반복 로파이 애니메이션 영상\n• cozy 2D lofi anime style: 따뜻한 지브리 스타일 2D 로파이 일러스트 아트\n• cute humanoid cyber Dokkaebi with glowing horns: 청색 형광 뿔을 가진 귀여운 사이버 도깨비 캐릭터\n• sitting at desk in hanok: 한옥 책상에 앉아 공부하는 연출\n• Namsan Tower night view through window: 창문 밖으로 남산타워 서울 야경 배경",
+      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, Ghibli aesthetic, an iconic cute humanoid cyber-folklore Dokkaebi with glowing cyan horns, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing under a warm desk lamp, with Namsan Tower night lights visible through the window, detailed, masterwork.",
+      thumbKoTranslation: "• 16:9 미드저니 썸네일 포맷: 공부하는 사이버 도깨비 2D 로파이 썸네일",
       isAiGenerated: true
     },
     {
       id: 2,
-      title: "후보 2: [편백나무 휴게실 창가 양머리 수면 힐링 8초 루프]",
-      prompt: "편백나무 찜질방 휴게실 창가에 앉아 찜질방 복장과 양머리 수건을 착용하고 조용히 휴식하는 귀여운 한국 여성 캐릭터 2D 로파이 일러스트 4K",
-      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime illustration style, a cute young Korean adult woman wearing comfortable jjimjilbang sauna clothes and a white sheep-folded towel hat (yangmeori) on head, sitting by a wooden window in a traditional Korean jjimjilbang rest room, ambient cozy glowing lights, clean 4k, NO sweat, NO steam, NO smoke, smooth repeating loop",
-      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime animation style, a cute young Korean adult woman wearing comfortable jjimjilbang sauna clothes and white sheep towel hat, resting by wooden window in Korean jjimjilbang, ambient cozy glowing lights, clean 4k, NO sweat, smooth repeating loop",
-      promptKoTranslation: "• static locked-off camera, NO camera movement: 고정 삼각대 카메라, 이동 없음, 줌 없음\n• cozy 2D lofi anime style: 2D 로파이 일러스트 연출\n• sitting by a wooden window in a Korean jjimjilbang rest room: 찜질방 휴게실 창가에 앉은 귀여운 캐릭터",
-      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, atmospheric shot of a cute Korean young adult woman wearing sauna clothes and a white sheep-folded towel hat, resting by the wooden window in a Korean jjimjilbang rest lounge, cozy mood, 8k render.",
-      thumbKoTranslation: "• 16:9 미드저니 썸네일 포맷: 편백나무 찜질방 휴게실 창가 배경 2D 로파이 썸네일",
+      title: "후보 2: [사이버 도깨비 LP 카페 다락방 수면 힐링 8초 루프]",
+      prompt: "비 내리는 밤, 은은한 네온 조명이 켜진 서촌 LP 다락방 창가에서 가야금 소리를 들으며 조용히 휴식하는 귀여운 사이버 도깨비 캐릭터 2D 로파이 일러스트 4K",
+      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, cozy 2D lofi anime illustration style, a cute humanoid cyber Dokkaebi with small glowing cyan horns, sitting comfortably on a soft armchair by a rainy window in a vintage Seoul LP cafe attic, listening to music, warm ambient neon glow, cozy coffee cup, raindrops sliding down the glass, Namsan tower in the distant foggy background, clean 4k, smooth repeating loop",
+      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, cozy 2D lofi anime animation style, a cute humanoid cyber Dokkaebi with glowing cyan horns, sitting on armchair by rainy window in Seoul LP cafe attic, warm neon glow, coffee cup, raindrops on glass, clean 4k, smooth repeating loop",
+      promptKoTranslation: "• static locked-off camera, NO camera movement: 고정 삼각대 카메라, 이동 없음\n• cute cyber Dokkaebi in LP attic by rainy window: 비 내리는 LP 다락방 창가에서 휴식하는 귀여운 사이버 도깨비\n• warm ambient neon glow: 아늑한 네온 불빛 조명",
+      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, Ghibli aesthetic, a cute humanoid cyber Dokkaebi with glowing cyan horns, resting on a cozy armchair by the rainy window in a vintage Seoul LP cafe attic, warm neon lights, cinematic lighting, 8k render.",
+      thumbKoTranslation: "• 16:9 미드저니 썸네일 포맷: 비 내리는 서울 LP 다락방 배경의 귀여운 사이버 도깨비 2D 로파이 썸네일",
       isAiGenerated: true
     }
   ]);
@@ -97,12 +97,12 @@ export default function Home() {
 
     // Smart Local Fallback
     let baseEn = "A seamless 8-second video loop, first frame matches last frame perfectly, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime animation style, Studio Ghibli inspired art style";
-    let characterEn = "a cute modern Korean young adult woman";
-    let pronounsEn = "her";
+    let characterEn = "a cute humanoid cyber-folklore Dokkaebi (Korean goblin) with two small glowing cyan horns on head";
+    let pronounsEn = "him";
 
-    if (text.includes("도깨비") || text.includes("dokkaebi") || text.includes("Dokkaebi")) {
-      characterEn = "a muscular humanoid cyber-folklore Dokkaebi (Oni) with cyan glowing horns and a fierce face, holding a neon-glowing spiked bat Dokkaebi Club";
-      pronounsEn = "him";
+    if (text.includes("소녀") || text.includes("여성") || text.includes("woman") || text.includes("girl")) {
+      characterEn = "a cute modern Korean young adult woman";
+      pronounsEn = "her";
     } else if (text.includes("백인") || text.includes("Caucasian") || text.includes("서양")) {
       if (text.includes("남자") || text.includes("소년") || text.includes("남성") || text.includes("man") || text.includes("boy")) {
         characterEn = "a cute Caucasian young adult man";
@@ -119,10 +119,8 @@ export default function Home() {
       pronounsEn = "its";
     }
 
-    if (text.includes("양머리") || text.includes("찜질방")) {
-      baseEn += `, ${characterEn} wearing comfortable Korean sauna clothes (jjimjilbang uniform) and an iconic white Korean sauna sheep-folded towel hat (yangmeori) made from a rolled bath towel on head`;
-      baseEn += ", sitting comfortably on a warm wooden floor in a cozy traditional Korean jjimjilbang REST LOUNGE";
-      baseEn += `, beside ${pronounsEn} is sweet rice drink (sikhye) in a plastic cup with a straw, baked brown eggs on a wooden tray`;
+    if (text.includes("한옥") || text.includes("hanok")) {
+      baseEn += `, ${characterEn}, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing in a notebook under a warm glowing desk lamp`;
     } else {
       baseEn += `, ${characterEn} resting comfortably in a cozy room, warm ambient lighting`;
     }
@@ -145,9 +143,9 @@ export default function Home() {
   const [videoLog, setVideoLog] = useState("");
 
   const initialCalendar = [
-    { day: "Day 01 (월)", title: "레트로 한국 목욕탕 & 찜질방 양머리 수면 힐링 ♨️🐑", enHookTitle: "[1 HOUR] Relaxing Korean Retro Bathhouse & Sauna Vibe ♨️ Lofi for Warm Bath & Sleep", inst: "Gayageum Lofi & Steam ASMR", wave: "432Hz Solfeggio & Deep Sleep" },
+    { day: "Day 01 (월)", title: "조선 사이버 도깨비 한옥 스튜디오 수면 힐링 🌌👹", enHookTitle: "[1 HOUR] Cyber Dokkaebi Cozy Hanok Studio 🌌 Lofi for Focus, Study & Deep Sleep", inst: "Gayageum & Night ASMR", wave: "432Hz Solfeggio & Deep Sleep" },
     { day: "Day 02 (화)", title: "북촌 한옥 카페 마루 정원 빗소리와 공부 로파이 🌧️", enHookTitle: "[1 HOUR] Rainy Hanok Cafe in Seoul ☕ 432Hz Solfeggio Study Beats", inst: "Korean Zither & Rain", wave: "432Hz Study" },
-    { day: "Day 03 (수)", title: "레트로 한국 목욕탕 & 찜질방 양머리 수면 힐링 ♨️🐑", enHookTitle: "[1 HOUR] Relaxing Korean Retro Bathhouse & Sauna Vibe ♨️ Lofi for Warm Bath & Sleep", inst: "Gayageum Lofi & Sweat ASMR", wave: "432Hz Solfeggio & Deep Sleep" },
+    { day: "Day 03 (수)", title: "자정 서울 N타워 창가 도깨비 해금 공부 비트 🗼👹", enHookTitle: "[1 HOUR] Midnight Seoul N-Tower Window Dokkaebi Haegeum Beats for Focus", inst: "Haegeum & City ASMR", wave: "432Hz Solfeggio & Deep Sleep" },
     { day: "Day 04 (목)", title: "심야 숲속 모닥불 불멍 & 힐링 국악 수면 로파이 🪵🔥", enHookTitle: "[1 HOUR] Relaxing Korean Campfire Bul-Meong Lofi 🪵 432Hz Sleep Beats", inst: "Haegeum & Campfire ASMR", wave: "432Hz Delta Sleep" },
     { day: "Day 05 (금)", title: "한국인만 밤에 몰래 듣는 432Hz 비밀 수면 로파이", enHookTitle: "[1 HOUR] Secret Korean Lofi Beats Only Koreans Listen To for Deep Sleep 🌙 [432Hz]", inst: "Daegeum Flute & Piano", wave: "432Hz Solfeggio" },
     { day: "Day 06 (토)", title: "비 내리는 이태원 포장마차 주황 천막 야경 로파이", enHookTitle: "[1 HOUR] Rainy Korean Pocha Street Food Tent Vibe 🌧️ 432Hz Chillhop & Jazz", inst: "Haegeum Fiddle & Jazz", wave: "432Hz Chill" },
