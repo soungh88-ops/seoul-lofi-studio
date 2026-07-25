@@ -5,6 +5,7 @@ import { exec } from "child_process";
 const ffmpegHelper = require("@/utils/ffmpeg-helper");
 const geminiHelper = require("@/utils/gemini");
 import { aiVideoHelper } from "@/utils/ai-video";
+const kaggleHelper = require("@/utils/kaggle-helper");
 
 // Helper to download a URL to a local file
 async function downloadFile(url, destPath) {
@@ -191,7 +192,7 @@ export async function POST(request) {
   const initialStatus = {
     status: "rendering",
     progress: 0,
-    log: "Starting video generation wizard...\n"
+    log: "Starting Kaggle Cloud Rendering System...\n"
   };
   fs.writeFileSync(statusPath, JSON.stringify(initialStatus, null, 2), "utf-8");
 
@@ -201,7 +202,7 @@ export async function POST(request) {
     const log = (text) => {
       console.log(text);
       logs.push(`[${new Date().toLocaleTimeString()}] ${text}`);
-      if (logs.length > 150) logs.shift(); // Keep logs buffer light (<50KB)
+      if (logs.length > 150) logs.shift();
 
       const currentStatus = {
         status: "rendering",
@@ -213,165 +214,45 @@ export async function POST(request) {
       } catch (e) {}
     };
 
-    const updateProgress = (pct) => {
-      initialStatus.progress = pct;
-      const currentStatus = {
-        status: "rendering",
-        progress: pct,
-        log: logs.join("\n")
-      };
-      try {
-        fs.writeFileSync(statusPath, JSON.stringify(currentStatus, null, 2), "utf-8");
-      } catch (e) {}
-    };
-
     try {
-      log(`Setting up ${durationHours}-hour video rendering pipeline.`);
+      log(`Setting up Kaggle Cloud rendering pipeline.`);
       log(`Selected Genre: ${genre}, Theme: ${theme}`);
 
-      // 4. Resolve Background Visual via AI Video Generator
-      log("Calling AI Video Generator for 8-sec anime video loop...");
-      const bgPrompt = `A 16:9 lo-fi anime illustration of ${theme}, warm lighting, aesthetic, 4k, looping`;
-      const aiVideoResult = await aiVideoHelper.generateVideoLoop({ theme, prompt: bgPrompt });
+      const realLofiTracks = [
+        "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3",
+        "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=chill-lofi-song-8444.mp3",
+        "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a77d54.mp3?filename=lofi-hip-hop-10332.mp3"
+      ];
       
-      let visualUrl = body.customVisualUrl || aiVideoResult.url;
-      const isVideo = visualUrl.endsWith(".mp4") || visualUrl.endsWith(".webm") || visualUrl.endsWith(".gif") || visualUrl.includes("video");
-      const ext = isVideo ? ".mp4" : ".jpg";
-      const imagePath = path.join(tempDir, `background${ext}`);
-
-      log(`Securing AI-generated video loop from: ${visualUrl}`);
-      try {
-        if (visualUrl.startsWith("data:")) {
-          log("Processing custom base64 visual data...");
-          const base64Data = visualUrl.split(";base64,").pop();
-          if (base64Data) {
-            fs.writeFileSync(imagePath, Buffer.from(base64Data, "base64"));
-          }
-        } else if (visualUrl.startsWith("blob:")) {
-          log("Blob URL detected. Falling back to local default logo...");
-          const fallbackLogoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
-          if (fs.existsSync(fallbackLogoPath)) {
-            fs.copyFileSync(fallbackLogoPath, imagePath);
-          }
-        } else if (visualUrl.startsWith("/")) {
-          const localSourcePath = path.join(process.cwd(), "public", visualUrl);
-          if (fs.existsSync(localSourcePath)) {
-            fs.copyFileSync(localSourcePath, imagePath);
-          } else {
-            throw new Error(`Local video file not found: ${localSourcePath}`);
-          }
-        } else {
-          await downloadFile(visualUrl, imagePath);
-        }
-      } catch (downloadError) {
-        log(`Download failed: ${downloadError.message}. Using local fallback visual...`);
-        const fallbackLocalPath = path.join(process.cwd(), "public", "videos", "rain_loop.mp4");
-        const fallbackLogoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
-        
-        if (fs.existsSync(fallbackLocalPath)) {
-          fs.copyFileSync(fallbackLocalPath, imagePath);
-        } else if (fs.existsSync(fallbackLogoPath)) {
-          fs.copyFileSync(fallbackLogoPath, imagePath);
-        } else {
-          const synthesizeCmd = `ffmpeg -f lavfi -i "color=c=0x0a0612:s=1280x720:d=8" -vframes 1 -y "${imagePath}"`;
-          await new Promise((res, rej) => exec(synthesizeCmd, (err) => (err ? rej(err) : res())));
-        }
-      }
-      
-      if (!fs.existsSync(imagePath)) {
-        const fallbackLogoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
-        if (fs.existsSync(fallbackLogoPath)) {
-          fs.copyFileSync(fallbackLogoPath, imagePath);
-        }
-      }
-      log("AI Video Loop secured.");
-
-      // 5. Prepare Ambient Track
-      const ambientPath = path.join(publicAudioDir, `${ambientType}.mp3`);
-      if (ambientType !== "none" && !fs.existsSync(ambientPath)) {
-        log(`Generating synthesized ambient sound layer (${ambientType})...`);
-        await generateSynthesizedAmbient(ambientPath, 120);
-        log("Ambient layer synthesized.");
-      }
-
-      // 6. Prepare Music Tracks in Strict 1..20 Order
-      log("Preparing audio compilation in strict 1..20 track order...");
-      const baseTracks = [];
-      const customTracks = body.customTracks || {}; // Map of { 1: base64/url, 2: base64/url... }
-      const totalTracksToBuild = isTestMode ? 2 : 20;
-
-      for (let i = 0; i < totalTracksToBuild; i++) {
+      const audioUrls = [];
+      const customTracks = body.customTracks || {};
+      const totalTracks = isTestMode ? 2 : 20;
+      for (let i = 0; i < totalTracks; i++) {
         const trackNum = i + 1;
-        const trackPath = path.join(tempDir, `track_${i}.mp3`);
         const customData = customTracks[trackNum] || customTracks[i];
-
-        if (customData) {
-          log(`Using custom uploaded audio for Track ${String(trackNum).padStart(2, "0")}...`);
-          try {
-            if (customData.startsWith("data:")) {
-              const base64Audio = customData.split(";base64,").pop();
-              fs.writeFileSync(trackPath, Buffer.from(base64Audio, "base64"));
-            } else if (customData.startsWith("http")) {
-              await downloadFile(customData, trackPath);
-            } else if (fs.existsSync(customData)) {
-              fs.copyFileSync(customData, trackPath);
-            }
-          } catch (e) {
-            log(`Failed to process custom audio for Track ${trackNum}: ${e.message}. Synthesizing fallback...`);
-            await generateSynthesizedTrack(trackPath, 180, i);
-          }
+        if (customData && customData.startsWith("http")) {
+          audioUrls.push(customData);
         } else {
-          log(`Synthesizing Lofi Track ${String(trackNum).padStart(2, "0")}/20...`);
-          const duration = isTestMode ? 45 : 70;
-          await generateSynthesizedTrack(trackPath, duration, i);
-
-          if (!isTestMode) {
-            const loopedTrackPath = path.join(tempDir, `track_${i}_looped.mp3`);
-            const loopCmd = `ffmpeg -i "concat:${trackPath}|${trackPath}|${trackPath}" -acodec copy -y "${loopedTrackPath}"`;
-            await new Promise((res, rej) => {
-              exec(loopCmd, (err) => (err ? rej(err) : res()));
-            });
-            fs.copyFileSync(loopedTrackPath, trackPath);
-          }
+          audioUrls.push(realLofiTracks[i % realLofiTracks.length]);
         }
-        baseTracks.push(trackPath);
       }
 
-      // Multi-hour sequence repetition: 1hr -> 1x (1..20), 2hr -> 2x (1..20, 1..20), 3hr -> 3x
-      let finalTracks = [];
-      const repeatCount = Math.max(parseInt(durationHours, 10) || 1, 1);
-      for (let r = 0; r < repeatCount; r++) {
-        finalTracks = finalTracks.concat(baseTracks);
-      }
-      log(`Compiled ${finalTracks.length} track(s) for ${repeatCount}-hour video rendering.`);
-
-      // 7. Render Video via FFmpeg
-      const videoName = `Seoul_Lofi_${Date.now()}.mp4`;
-      const videoPath = path.join(outputDir, videoName);
-
-      log("Executing FFmpeg render engine. Please wait, compiling streams...");
-      await ffmpegHelper.renderVideo({
-        imagePath,
-        audioTracks: finalTracks,
-        ambientType,
-        ambientVolume,
-        audioEffect,
-        outputPath: videoPath,
-        onProgress: (pct) => {
-          updateProgress(pct);
-        },
-        onLog: (text) => {
-          log(text);
-        }
+      log("Pushing script and parameters to Kaggle for 8-sec Veo loop generation, rendering, and uploading...");
+      const pushResult = await kaggleHelper.pushRenderKernel({
+        title: `Seoul-Lofi-${theme.replace(/[^a-zA-Z0-9]/g, "-")}`,
+        durationHours: durationHours,
+        veoPrompt: `A 16:9 lo-fi anime illustration of ${theme}, warm lighting, aesthetic, 4k, looping`,
+        audioUrls: audioUrls
       });
 
-      // 8. Write final success status
-      log("Rendering complete!");
+      log(`Kaggle job successfully started!`);
+      log(`Track it here: ${pushResult.url}`);
+
       const finalStatus = {
         status: "success",
         progress: 100,
-        videoPath: videoPath,
-        videoName: videoName,
+        videoPath: pushResult.url,
+        videoName: `Kaggle Job: ${theme}`,
         log: logs.join("\n")
       };
       fs.writeFileSync(statusPath, JSON.stringify(finalStatus, null, 2), "utf-8");
@@ -388,17 +269,17 @@ export async function POST(request) {
       }
       library.unshift({
         id: Date.now().toString(),
-        name: videoName,
-        path: videoPath,
+        name: `Kaggle Job: ${theme}`,
+        path: pushResult.url,
         createdAt: new Date().toISOString(),
         genre,
         theme,
-        duration: isTestMode ? "00:01:30" : `${durationHours}:00:00`
+        duration: `${durationHours}:00:00`
       });
       fs.writeFileSync(libraryPath, JSON.stringify(library, null, 2), "utf-8");
 
     } catch (error) {
-      log(`Error during rendering: ${error.message}`);
+      log(`Error during Kaggle execution: ${error.message}`);
       const errStatus = {
         status: "error",
         progress: 0,
@@ -410,6 +291,6 @@ export async function POST(request) {
 
   return NextResponse.json({
     success: true,
-    message: "Video rendering job successfully queued in background."
+    message: "Kaggle rendering job successfully queued in background."
   });
 }
