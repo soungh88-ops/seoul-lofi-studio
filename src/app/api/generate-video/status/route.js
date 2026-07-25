@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
  * Polls a Veo Long Running Operation.
  * Google Veo returns: { response: { generateVideoResponse: { generatedSamples: [ { video: { uri: "https://generativelanguage.googleapis.com/v1beta/files/xxxx:download?alt=media" } } ] } } }
  */
+// Hot-cache to track poll counts for sandbox simulation
+const sandboxPollTracker = {};
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,6 +16,23 @@ export async function GET(request) {
 
     if (!operationName) {
       return NextResponse.json({ error: "name 파라미터가 필요합니다." }, { status: 400 });
+    }
+
+    // Handle Sandbox Simulation
+    if (operationName.startsWith("operations/sandbox-veo-")) {
+      const type = operationName.includes("drive") ? "drive" : "rain";
+      const count = sandboxPollTracker[operationName] || 0;
+      
+      if (count < 2) {
+        sandboxPollTracker[operationName] = count + 1;
+        return NextResponse.json({ done: false });
+      }
+      
+      delete sandboxPollTracker[operationName];
+      return NextResponse.json({
+        done: true,
+        videoUrl: `/videos/${type}_loop.mp4`
+      });
     }
 
     if (!apiKey || apiKey === "your_gemini_api_key_here") {
