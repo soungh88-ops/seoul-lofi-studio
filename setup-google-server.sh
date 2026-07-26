@@ -5,6 +5,19 @@
 
 echo "👹 [서울 로파이 스튜디오] 구글 무료 VM 서버 환경 설정을 시작합니다..."
 
+# 0. 스왑 메모리 2GB 활성화 (1GB RAM의 e2-micro OOM 방지용)
+if [ ! -f /swapfile ]; then
+    echo "💾 e2-micro OOM 방지를 위해 2GB 스왑 메모리를 생성합니다..."
+    sudo fallocate -l 2G /swapfile
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    echo "스왑 메모리 활성화 완료!"
+else
+    echo "💾 이미 스왑 메모리가 설정되어 있습니다."
+fi
+
 # 1. 패키지 업데이트 및 기본 도구 설치
 echo "1. 시스템 패키지 업데이트 및 필수 도구 설치..."
 sudo apt update -y

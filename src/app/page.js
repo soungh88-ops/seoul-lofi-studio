@@ -1832,7 +1832,7 @@ export default function Home() {
                         if (res.ok) {
                           const data = await res.json();
                           const translated = data.translatedVideo || data.translatedImage || "A cozy 2D lofi animation";
-                          const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                          const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style";
                           const combined = `${translated}, ${fixedConstitution}`;
                           navigator.clipboard.writeText(combined);
                           alert("✅ [한글 지시 번역] + [영문 AI 헌법]이 성공적으로 결합되어 클립보드에 복사되었습니다!");
@@ -1840,7 +1840,7 @@ export default function Home() {
                           throw new Error("Translation failed");
                         }
                       } catch (err) {
-                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style";
                         const combined = `${customKoreanPrompt}, ${fixedConstitution}`;
                         navigator.clipboard.writeText(combined);
                         alert("⚠️ 번역 지연으로 원본 결합 텍스트가 클립보드에 복사되었습니다!");
@@ -1880,7 +1880,7 @@ export default function Home() {
                           const transData = await translateRes.json();
                           translated = transData.translatedVideo || transData.translatedImage || translated;
                         }
-                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style";
+                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style";
                         const combinedPrompt = `${translated}, ${fixedConstitution}`;
                         
                         // 2. Generate Video
@@ -1929,7 +1929,7 @@ export default function Home() {
                   lineHeight: "1.4",
                   fontFamily: "var(--font-mono)"
                 }}>
-                  perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, 4k resolution, high quality, highly detailed, smooth 2D animation style
+                  perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style
                 </div>
               </div>
 

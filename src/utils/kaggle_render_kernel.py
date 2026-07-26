@@ -44,7 +44,7 @@ def generate_veo_video_loop(prompt, api_key, dest_path):
     models = ["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"]
     body = {
         "instances": [{
-            "prompt": f"{prompt}, MANDATORY PERFECT SEAMLESS LOOP: first frame matches last frame perfectly, static tripod camera shot, ZERO camera zoom, ZERO camera motion, cozy 2D lofi anime animation style, 4K resolution, perfect repeating loop"
+            "prompt": f"{prompt}, MANDATORY PERFECT SEAMLESS LOOP: first frame matches last frame perfectly, static tripod camera shot, ZERO camera zoom, ZERO camera motion, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, cozy 2D lofi anime animation style, 4K resolution, perfect repeating loop"
         }],
         "parameters": {
             "aspectRatio": "16:9",
