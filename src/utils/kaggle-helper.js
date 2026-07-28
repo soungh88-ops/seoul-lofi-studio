@@ -180,8 +180,9 @@ class KaggleHelper {
   async getKernelStatus(slug) {
     this._checkCredentials();
 
-    // Kaggle API: /api/v1/kernels/status/{userName}/{kernelSlug}
-    const url = `https://www.kaggle.com/api/v1/kernels/status/${this.username}/${slug}`;
+    // Kaggle API 공식 형식: 쿼리 파라미터 사용
+    // GET /api/v1/kernels/status?userName=<user>&kernelSlug=<slug>
+    const url = `https://www.kaggle.com/api/v1/kernels/status?userName=${this.username}&kernelSlug=${slug}`;
     console.log(`[Kaggle Status Check] GET ${url}`);
     const response = await fetch(url, {
       headers: { "Authorization": this._getAuthHeader() }
@@ -189,14 +190,17 @@ class KaggleHelper {
 
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
-      console.error(`[Kaggle Status Error] HTTP ${response.status}: ${errText}`);
-      throw new Error(`Kaggle 상태 조회 실패 (${response.status}) ${errText}`);
+      console.error(`[Kaggle Status Error] HTTP ${response.status}: ${errText.slice(0, 200)}`);
+      throw new Error(`Kaggle 상태 조회 실패 (${response.status}) ${errText.slice(0, 200)}`);
     }
 
     const data = await response.json();
+    console.log(`[Kaggle Status] 원본 응답:`, JSON.stringify(data).slice(0, 300));
+
     // runningStatus: "complete" | "running" | "queued" | "error" | "cancelAcknowledged"
     const status = (
       data.currentRunningVersion?.runningStatus ||
+      data.runningStatus ||
       data.status ||
       "queued"
     ).toLowerCase();
