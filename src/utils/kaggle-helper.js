@@ -120,12 +120,12 @@ class KaggleHelper {
       throw new Error(`Kaggle push 실패 (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    // ref 형식: "username/slug" 또는 response.url ("https://www.kaggle.com/code/username/slug")에서 slug 추출
+    // URL/ref 예: "https://www.kaggle.com/code/soungh88/seoul-lofi-8sec-1234" 또는 "soungh88/seoul-lofi-8sec-1234"
     let actualSlug = slug;
-    if (data.ref) {
-      actualSlug = data.ref.split("/").pop();
-    } else if (data.url) {
-      actualSlug = data.url.split("/").pop();
+    const targetPath = data.url || data.ref || "";
+    if (targetPath) {
+      const parts = targetPath.split("/").filter(Boolean);
+      actualSlug = parts[parts.length - 1] || slug;
     }
 
     console.log(`[Kaggle 8sec] Push 성공! data=${JSON.stringify(data)}, actualSlug=${actualSlug}`);
