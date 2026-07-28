@@ -645,9 +645,9 @@ export default function Home() {
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 120) { // Max 10 minutes (5s * 120)
+      if (attempts > 360) { // Max 30 minutes (5s * 360)
         clearInterval(interval);
-        setVideoLog("시간 초과: 비디오 생성 대기 시간이 초과되었습니다.");
+        setVideoLog("시간 초과: 비디오 생성 대기 시간(30분)이 초과되었습니다.");
         setIsGeneratingVideo(false);
         return;
       }
@@ -660,13 +660,13 @@ export default function Home() {
             if (data.error) {
               setVideoLog(`비디오 생성 실패: ${data.error}`);
             } else if (data.videoUrl) {
-              setVideoLog("비디오 생성 성공!");
+              setVideoLog(data.log || "비디오 생성 성공!");
               setUserMediaUrl(data.videoUrl);
               setUserMediaType("video");
             }
             setIsGeneratingVideo(false);
           } else {
-            setVideoLog(`AI 비디오 생성 중... (${attempts * 5}초 경과)`);
+            setVideoLog(data.log || `Kaggle GPU 비디오 생성 중... (${attempts * 5}초 경과)`);
           }
         } else {
           clearInterval(interval);
