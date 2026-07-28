@@ -37,10 +37,8 @@ class KaggleHelper {
       .replace("{{AUDIO_URLS}}", audioUrlsPy)
       .replace("{{GEMINI_API_KEY}}", geminiApiKey);
 
-    const slug = title.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").slice(0, 50);
     const payload = {
-      id: `${this.username}/${slug}`,
-      title: title,
+      newTitle: title,
       code: scriptContent,
       language: "python",
       kernelType: "script",
@@ -94,8 +92,7 @@ class KaggleHelper {
     const title = `Seoul Lofi 8sec ${ts}`;
 
     const payload = {
-      id: `${this.username}/${slug}`,
-      title: title,
+      newTitle: title,
       code: scriptContent,
       language: "python",
       kernelType: "script",
@@ -107,7 +104,7 @@ class KaggleHelper {
       kernelSources: []
     };
 
-    console.log(`[Kaggle 8sec] Pushing kernel: ${payload.id}`);
+    console.log(`[Kaggle 8sec] Pushing new kernel: ${title}`);
 
     const response = await fetch("https://www.kaggle.com/api/v1/kernels/push", {
       method: "POST",
@@ -123,8 +120,12 @@ class KaggleHelper {
       throw new Error(`Kaggle push 실패 (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    console.log(`[Kaggle 8sec] Push 성공! URL: ${data.url}`);
-    return { slug, ref: data.ref, url: data.url };
+    // ref 형식: "username/slug" → slug 추출
+    const ref = data.ref || "";
+    const actualSlug = ref.split("/")[1] || slug;
+
+    console.log(`[Kaggle 8sec] Push 성공! ref=${ref}, URL: ${data.url}`);
+    return { slug: actualSlug, ref, url: data.url };
   }
 
   /**
