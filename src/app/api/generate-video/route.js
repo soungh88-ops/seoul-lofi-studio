@@ -1,81 +1,33 @@
 import { NextResponse } from "next/server";
+const kaggleHelper = require("@/utils/kaggle-helper");
 
 /**
  * POST /api/generate-video
- * Starts a Google Veo 3.1 video generation job using official model names.
- * Models: veo-3.1-fast-generate-preview or veo-3.1-generate-preview
+ * 8초 로파이 배경 영상을 Kaggle Cloud GPU로 생성.
+ * Kaggle 내에서 Veo 3.1 API 호출 → 실패 시 빗금 없는 FFmpeg 클린 폴백.
  */
 export async function POST(request) {
   try {
-    const { prompt, imageUrl } = await request.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { prompt } = await request.json();
 
-    if (!apiKey || apiKey === "your_gemini_api_key_here") {
-      return NextResponse.json({ error: "GEMINI_API_KEY가 설정되지 않았습니다." }, { status: 500 });
+    if (!prompt) {
+      return NextResponse.json({ error: "prompt 파라미터가 필요합니다." }, { status: 400 });
     }
 
-    const veoPrompt = prompt
-      ? `${prompt}, MANDATORY PERFECT SEAMLESS LOOP: first frame matches last frame perfectly, static tripod camera shot, ZERO camera zoom, ZERO camera motion, cozy 2D lofi anime animation style, Studio Ghibli inspired art style, character completely still in peaceful resting pose, ambient warm lighting, NO sweat, NO steam, NO smoke, clean 4K resolution, perfect repeating loop`
-      : "Cozy Korean sauna jjimjilbang rest room, lofi anime character wearing yangmeori towel hat, MANDATORY PERFECT SEAMLESS LOOP: first frame matches last frame perfectly, static tripod camera shot, ZERO camera zoom, ZERO camera motion, NO sweat, 4K 8-second invisible loop";
+    // 고유 출력 파일명 생성
+    const outputFileName = `8sec_${Date.now()}.mp4`;
 
-    const body = {
-      instances: [{ prompt: veoPrompt }],
-      parameters: {
-        aspectRatio: "16:9",
-        sampleCount: 1,
-        durationSeconds: 8
-      }
-    };
+    console.log(`[generate-video] Kaggle 8초 영상 생성 요청: ${prompt.slice(0, 80)}...`);
 
-    // Official Google Veo 3.1 model names
-    const veoModels = [
-      "veo-3.1-fast-generate-preview",
-      "veo-3.1-generate-preview"
-    ];
+    const result = await kaggleHelper.push8SecKernel({ prompt, outputFileName });
 
-    let lastError = null;
-    let lastStatus = 500;
-
-    for (const model of veoModels) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:predictLongRunning?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok && data.name) {
-          return NextResponse.json({
-            operationName: data.name,
-            model: model,
-            message: `Veo (${model}) 비디오 생성 작업 시작!`
-          });
-        }
-
-        lastError = data.error?.message || response.statusText;
-        lastStatus = response.status;
-        console.warn(`[Veo model ${model} failed]:`, lastError);
-      } catch (err) {
-        lastError = err.message;
-        console.warn(`[Veo model ${model} fetch error]:`, err.message);
-      }
-    }
-
-    // Sandbox / Simulation Fallback Pipeline if Gemini Key lacks Veo access (exceeded quota)
-    console.log(`[Veo API Quota Active] Activating Vercel Sandbox Video Generator fallback...`);
-    const isDrive = veoPrompt.toLowerCase().includes("drive") || veoPrompt.toLowerCase().includes("highway") || veoPrompt.toLowerCase().includes("도로") || veoPrompt.toLowerCase().includes("운전");
-    const sandboxType = isDrive ? "drive" : "rain";
-    
     return NextResponse.json({
-      operationName: `operations/sandbox-veo-${sandboxType}`,
-      model: "veo-sandbox-simulator",
-      message: `[Vercel Sandbox Mode] Google Veo 비디오 시뮬레이션 작업 시작! (${sandboxType})`
+      operationName: `kaggle-8sec-${result.slug}|${outputFileName}`,
+      model: "kaggle-veo-cloud",
+      message: `✅ Kaggle Cloud GPU로 8초 영상 생성 작업 전송 완료! (슬러그: ${result.slug})`,
+      kaggleUrl: result.url
     });
+
   } catch (error) {
     console.error("[generate-video route error]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
