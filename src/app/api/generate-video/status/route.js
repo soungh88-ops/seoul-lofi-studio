@@ -21,15 +21,15 @@ export async function GET(request) {
 
     // ── Kaggle 8초 영상 작업 처리 ──────────────────────────────────────────
     if (operationName.startsWith("kaggle-8sec-")) {
-      const rest = operationName.slice("kaggle-8sec-".length); // "slug|filename"
-      const pipeIdx = rest.indexOf("|");
+      const rest = operationName.slice("kaggle-8sec-".length); // "slug:::filename"
+      const sepIdx = rest.indexOf(":::");
 
-      if (pipeIdx === -1) {
-        return NextResponse.json({ error: "operationName 형식 오류 (slug|filename 필요)" }, { status: 400 });
+      if (sepIdx === -1) {
+        return NextResponse.json({ error: "operationName 형식 오류 (slug:::filename 필요)" }, { status: 400 });
       }
 
-      const slug = rest.slice(0, pipeIdx);
-      const outputFileName = rest.slice(pipeIdx + 1);
+      const slug = rest.slice(0, sepIdx);
+      const outputFileName = rest.slice(sepIdx + 3);
 
       console.log(`[video/status] Kaggle 폴링: slug=${slug}, file=${outputFileName}`);
 

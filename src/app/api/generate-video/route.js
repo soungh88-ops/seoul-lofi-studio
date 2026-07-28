@@ -22,7 +22,7 @@ export async function POST(request) {
     const result = await kaggleHelper.push8SecKernel({ prompt, outputFileName });
 
     return NextResponse.json({
-      operationName: `kaggle-8sec-${result.slug}|${outputFileName}`,
+      operationName: `kaggle-8sec-${result.slug}:::${outputFileName}`,
       model: "kaggle-veo-cloud",
       message: `✅ Kaggle Cloud GPU로 8초 영상 생성 작업 전송 완료! (슬러그: ${result.slug})`,
       kaggleUrl: result.url
