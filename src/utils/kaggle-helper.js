@@ -120,12 +120,16 @@ class KaggleHelper {
       throw new Error(`Kaggle push 실패 (${response.status}): ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    // ref 형식: "username/slug" → slug 추출
-    const ref = data.ref || "";
-    const actualSlug = ref.split("/")[1] || slug;
+    // ref 형식: "username/slug" 또는 response.url ("https://www.kaggle.com/code/username/slug")에서 slug 추출
+    let actualSlug = slug;
+    if (data.ref) {
+      actualSlug = data.ref.split("/").pop();
+    } else if (data.url) {
+      actualSlug = data.url.split("/").pop();
+    }
 
-    console.log(`[Kaggle 8sec] Push 성공! ref=${ref}, URL: ${data.url}`);
-    return { slug: actualSlug, ref, url: data.url };
+    console.log(`[Kaggle 8sec] Push 성공! data=${JSON.stringify(data)}, actualSlug=${actualSlug}`);
+    return { slug: actualSlug, ref: data.ref || `${this.username}/${actualSlug}`, url: data.url };
   }
 
   /**
@@ -136,13 +140,17 @@ class KaggleHelper {
   async getKernelStatus(slug) {
     this._checkCredentials();
 
-    const url = `https://www.kaggle.com/api/v1/kernels/${this.username}/${slug}`;
+    // Kaggle API: /api/v1/kernels/status/{userName}/{kernelSlug}
+    const url = `https://www.kaggle.com/api/v1/kernels/status/${this.username}/${slug}`;
+    console.log(`[Kaggle Status Check] GET ${url}`);
     const response = await fetch(url, {
       headers: { "Authorization": this._getAuthHeader() }
     });
 
     if (!response.ok) {
-      throw new Error(`Kaggle 상태 조회 실패 (${response.status})`);
+      const errText = await response.text().catch(() => "");
+      console.error(`[Kaggle Status Error] HTTP ${response.status}: ${errText}`);
+      throw new Error(`Kaggle 상태 조회 실패 (${response.status}) ${errText}`);
     }
 
     const data = await response.json();
