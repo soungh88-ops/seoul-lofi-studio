@@ -1,21 +1,61 @@
 const fs = require("fs");
 const path = require("path");
 
+/**
+ * .env.local 파일을 직접 파싱하여 환경변수 객체 반환.
+ * PM2가 환경변수를 제대로 주입하지 못하는 경우를 대비한 폴백.
+ */
+function loadEnvLocal() {
+  try {
+    const envPath = path.join(process.cwd(), ".env.local");
+    const content = fs.readFileSync(envPath, "utf-8");
+    const vars = {};
+    content.split("\n").forEach((line) => {
+      const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+      if (m) vars[m[1].trim()] = m[2].trim();
+    });
+    return vars;
+  } catch {
+    return {};
+  }
+}
+
 class KaggleHelper {
   constructor() {
-    // .env.local에 KAGGLER_USERNAME 또는 KAGGLE_USERNAME 둘 다 지원
-    this.username = process.env.KAGGLE_USERNAME || process.env.KAGGLER_USERNAME;
-    this.key = process.env.KAGGLE_KEY || process.env.KAGGLER_KEY;
+    // 초기화 시점에 한번 로드 (Next.js가 주입한 경우)
+    this._refreshCredentials();
+  }
+
+  _refreshCredentials() {
+    // process.env 우선, 없으면 .env.local 직접 파싱
+    const envLocal = loadEnvLocal();
+    this.username =
+      process.env.KAGGLE_USERNAME ||
+      process.env.KAGGLER_USERNAME ||
+      envLocal.KAGGLE_USERNAME ||
+      envLocal.KAGGLER_USERNAME ||
+      "";
+    this.key =
+      process.env.KAGGLE_KEY ||
+      process.env.KAGGLER_KEY ||
+      envLocal.KAGGLE_KEY ||
+      envLocal.KAGGLER_KEY ||
+      "";
   }
 
   _getAuthHeader() {
+    // 매 호출마다 최신 자격증명 갱신
+    this._refreshCredentials();
     const authBuffer = Buffer.from(`${this.username}:${this.key}`).toString("base64");
     return `Basic ${authBuffer}`;
   }
 
   _checkCredentials() {
+    this._refreshCredentials();
     if (!this.username || !this.key) {
-      throw new Error("KAGGLE_USERNAME 또는 KAGGLE_KEY 환경 변수가 설정되지 않았습니다.");
+      throw new Error(
+        `Kaggle 자격증명 없음: KAGGLE_USERNAME=${this.username || "(없음)"}, KAGGLE_KEY=${this.key ? "설정됨" : "(없음)"}`
+      );
     }
   }
 
