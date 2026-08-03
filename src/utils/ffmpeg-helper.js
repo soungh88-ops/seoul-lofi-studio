@@ -195,9 +195,10 @@ class FFmpegHelper {
       }
 
       let mappedAudioLabel = finalAudioLabel;
+      const sep = filterComplex.trim().endsWith(";") ? "" : ";";
       if (enableNeonDokkaebi && dokkaebiInputIndex !== -1) {
         // Split final audio: one for final render, one for driving showwaves visual
-        filterComplex += `; ${finalAudioLabel}asplit=2[audio_out][audio_wave]`;
+        filterComplex += `${sep} ${finalAudioLabel}asplit=2[audio_out][audio_wave]`;
         mappedAudioLabel = "[audio_out]";
 
         // Generate glowing neon audio spectrum wave (centered line mode, green/cyan glow)
@@ -205,13 +206,15 @@ class FFmpegHelper {
         filterComplex += `; [wave]format=rgba,colorchannelmixer=aa=0.45[wave_trans]`;
         
         // Scale logo & Overlay the pulsing wave and then the logo
+        const videoIn = baseVideoLabel.startsWith("[") ? baseVideoLabel : `[${baseVideoLabel}]`;
         filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]`;
-        filterComplex += `; ${baseVideoLabel}[wave_trans]overlay=40:40[v_wave_over]`;
+        filterComplex += `; ${videoIn}[wave_trans]overlay=40:40[v_wave_over]`;
         filterComplex += `; [v_wave_over][dok_scaled]overlay=40:40[v_dok_over]`;
         finalVideoLabel = "[v_dok_over]";
       } else if (dokkaebiInputIndex !== -1) {
         // Simple static overlay if neon is disabled
-        filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]; ${baseVideoLabel}[dok_scaled]overlay=40:40[v_dok_over]`;
+        const videoIn = baseVideoLabel.startsWith("[") ? baseVideoLabel : `[${baseVideoLabel}]`;
+        filterComplex += `${sep} [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]; ${videoIn}[dok_scaled]overlay=40:40[v_dok_over]`;
         finalVideoLabel = "[v_dok_over]";
       }
 
