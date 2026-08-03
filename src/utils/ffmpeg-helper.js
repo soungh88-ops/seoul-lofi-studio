@@ -127,11 +127,7 @@ class FFmpegHelper {
       // Input 0: Background Visual (Image, GIF, or Video Loop)
       const isVideoInput = imagePath.toLowerCase().endsWith(".mp4") || imagePath.toLowerCase().endsWith(".webm") || imagePath.toLowerCase().endsWith(".gif");
       if (isVideoInput) {
-        if (enablePingPongLoop) {
-          cmdInputs.push(`-i "${imagePath}"`);
-        } else {
-          cmdInputs.push(`-stream_loop -1 -i "${imagePath}"`);
-        }
+        cmdInputs.push(`-stream_loop -1 -i "${imagePath}"`);
       } else {
         cmdInputs.push(`-loop 1 -r 2 -i "${imagePath}"`);
       }
@@ -160,11 +156,8 @@ class FFmpegHelper {
       let filterComplex = "";
       let baseVideoLabel = "0:v";
 
-      // Video Ping-Pong Seamless Reverse Loop filter if video input
-      if (isVideoInput && enablePingPongLoop) {
-        filterComplex += `[0:v]split[v_fwd][v_tmp]; [v_tmp]reverse[v_rev]; [v_fwd][v_rev]concat=n=2:v=1:a=0[v_pingpong]; [v_pingpong]loop=loop=-1:size=32767:start=0[v_base]; `;
-        baseVideoLabel = "[v_base]";
-      }
+      // Video looping is handled natively at the input stage via -stream_loop -1.
+      // The ping-pong filter complex was removed to prevent browser frame freezing and CPU starvation.
 
       let finalVideoLabel = baseVideoLabel;
 
