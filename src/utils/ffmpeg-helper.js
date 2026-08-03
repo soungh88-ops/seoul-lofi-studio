@@ -76,6 +76,7 @@ class FFmpegHelper {
 
       // Calculate exact total duration to prevent infinite loops from hanging -shortest
       let totalDuration = 3600; // default 1 hour fallback
+      let bgFrameCount = 200; // default 8s at 25fps fallback
       try {
         onLog("Calculating audio track durations via ffprobe...");
         const durations = await Promise.all(audioTracks.map(track => {
@@ -93,6 +94,20 @@ class FFmpegHelper {
         const crossfadeOverlap = (audioTracks.length - 1) * 3;
         totalDuration = Math.max(Math.round(sumDurations - crossfadeOverlap), 1);
         onLog(`Total calculated music length: ${totalDuration}s`);
+
+        if (isVideoInput) {
+          onLog("Calculating background video frame count...");
+          bgFrameCount = await new Promise((res) => {
+            exec(`ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of default=noprint_wrappers=1:nokey=1 "${imagePath}"`, (err, stdout) => {
+              if (err) res(200);
+              else {
+                const val = parseInt(stdout.trim(), 10);
+                res(isNaN(val) || val <= 0 ? 200 : val);
+              }
+            });
+          });
+          onLog(`Background loop frame count: ${bgFrameCount}`);
+        }
       } catch (durationErr) {
         onLog(`Warning: Failed to parse durations, falling back to 3600s: ${durationErr.message}`);
       }
@@ -125,9 +140,8 @@ class FFmpegHelper {
       }
 
       // Input 0: Background Visual (Image, GIF, or Video Loop)
-      const isVideoInput = imagePath.toLowerCase().endsWith(".mp4") || imagePath.toLowerCase().endsWith(".webm") || imagePath.toLowerCase().endsWith(".gif");
       if (isVideoInput) {
-        cmdInputs.push(`-stream_loop -1 -i "${imagePath}"`);
+        cmdInputs.push(`-i "${imagePath}"`);
       } else {
         cmdInputs.push(`-loop 1 -r 2 -i "${imagePath}"`);
       }
@@ -156,14 +170,20 @@ class FFmpegHelper {
       let filterComplex = "";
       let baseVideoLabel = "0:v";
 
-      // Video looping is handled natively at the input stage via -stream_loop -1.
-      // The ping-pong filter complex was removed to prevent browser frame freezing and CPU starvation.
+      if (isVideoInput) {
+        // Loop the background video stream using the exact frame count to prevent freezing
+        filterComplex += `[0:v]loop=loop=-1:size=${bgFrameCount}:start=0[v_base]`;
+        baseVideoLabel = "[v_base]";
+      }
 
       let finalVideoLabel = baseVideoLabel;
 
       const trackCount = audioTracks.length;
 
       // Concatenate audio tracks sequentially with crossfades
+      if (filterComplex && !filterComplex.trim().endsWith(";")) {
+        filterComplex += "; ";
+      }
       if (trackCount === 1) {
         filterComplex += `[1:a]`;
       } else {
