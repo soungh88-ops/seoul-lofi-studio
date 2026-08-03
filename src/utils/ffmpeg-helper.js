@@ -74,6 +74,29 @@ class FFmpegHelper {
 
       onLog("Starting video rendering process (with 핑퐁 리버스 Seamless Loop Engine)...");
 
+      // Calculate exact total duration to prevent infinite loops from hanging -shortest
+      let totalDuration = 3600; // default 1 hour fallback
+      try {
+        onLog("Calculating audio track durations via ffprobe...");
+        const durations = await Promise.all(audioTracks.map(track => {
+          return new Promise((res) => {
+            exec(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${track}"`, (err, stdout) => {
+              if (err) res(180);
+              else {
+                const val = parseFloat(stdout.trim());
+                res(isNaN(val) ? 180 : val);
+              }
+            });
+          });
+        }));
+        const sumDurations = durations.reduce((a, b) => a + b, 0);
+        const crossfadeOverlap = (audioTracks.length - 1) * 3;
+        totalDuration = Math.max(Math.round(sumDurations - crossfadeOverlap), 1);
+        onLog(`Total calculated music length: ${totalDuration}s`);
+      } catch (durationErr) {
+        onLog(`Warning: Failed to parse durations, falling back to 3600s: ${durationErr.message}`);
+      }
+
       // 1. Resolve ambient track path
       let ambientPath = null;
       if (ambientType && ambientType !== "none") {
@@ -196,7 +219,7 @@ class FFmpegHelper {
         `-movflags +faststart`,
         `-c:a aac`,
         `-b:a 192k`,
-        `-shortest`,
+        `-t ${totalDuration}`,
         `-y`,
         `"${outputPath}"`
       ].join(" ");
@@ -220,7 +243,7 @@ class FFmpegHelper {
           const seconds = parseInt(timeMatch[3], 10);
           const currentSeconds = hours * 3600 + minutes * 60 + seconds;
           
-          const totalEstimate = Math.max(trackCount * 180, 1);
+          const totalEstimate = Math.max(totalDuration, 1);
           const percentage = Math.min(Math.round((currentSeconds / totalEstimate) * 100), 99);
           onProgress(percentage);
         } else {
