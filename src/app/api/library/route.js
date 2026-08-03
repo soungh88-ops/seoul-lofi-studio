@@ -18,6 +18,15 @@ export async function GET() {
   if (fs.existsSync(libraryPath)) {
     try {
       library = JSON.parse(fs.readFileSync(libraryPath, "utf-8"));
+      
+      // De-duplicate library list by name (keeping the first rich-metadata entry)
+      const seen = new Set();
+      library = library.filter((item) => {
+        if (!item || !item.name) return false;
+        if (seen.has(item.name)) return false;
+        seen.add(item.name);
+        return true;
+      });
     } catch (e) {
       library = [];
     }

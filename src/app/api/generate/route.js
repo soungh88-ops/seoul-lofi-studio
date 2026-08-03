@@ -302,15 +302,24 @@ export async function POST(request) {
           library = [];
         }
       }
-      library.unshift({
-        id: Date.now().toString(),
+      
+      // Prevent duplicates by overwriting existing scanned entries of the same name
+      const existingIndex = library.findIndex((item) => item.name === outputFileName);
+      const newEntry = {
+        id: existingIndex >= 0 ? library[existingIndex].id : Date.now().toString(),
         name: outputFileName,
         path: `/videos/${outputFileName}`,
         createdAt: new Date().toISOString(),
         genre,
         theme,
         duration: `${durationHours}:00:00`
-      });
+      };
+      
+      if (existingIndex >= 0) {
+        library[existingIndex] = newEntry;
+      } else {
+        library.unshift(newEntry);
+      }
       fs.writeFileSync(libraryPath, JSON.stringify(library, null, 2), "utf-8");
 
     } catch (error) {
