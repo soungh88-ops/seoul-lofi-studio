@@ -925,6 +925,25 @@ export default function Home() {
     }
   }, []);
 
+  // Check backend status on mount to recover UI state if rendering is already running in the background
+  useEffect(() => {
+    const checkInitialStatus = async () => {
+      try {
+        const res = await fetch("/api/status");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "rendering") {
+            setIsRendering(true);
+            setRenderStatus("rendering");
+            if (data.log) setRenderLog(data.log);
+            if (typeof data.progress === "number") setRenderProgress(data.progress);
+          }
+        }
+      } catch (e) {}
+    };
+    checkInitialStatus();
+  }, []);
+
   // Poll render status from backend ONLY when active rendering is in progress
   useEffect(() => {
     if (!isRendering) return;
