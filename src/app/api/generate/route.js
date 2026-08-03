@@ -82,6 +82,7 @@ export async function POST(request) {
     theme,
     modelName,
     chatHistory,
+    customVisualUrl,
     ambientType = "rain",
     ambientVolume = 0.12,
     audioEffect = "none",
@@ -255,7 +256,30 @@ export async function POST(request) {
       // Determine local visual background video
       const defaultVideo = path.join(process.cwd(), "public", "videos", "donggung_palace_rain_8s.mp4");
       const defaultImage = path.join(process.cwd(), "public", "donggung_palace_rain_master.jpg");
-      const bgVisualPath = fs.existsSync(defaultVideo) ? defaultVideo : defaultImage;
+      let bgVisualPath = fs.existsSync(defaultVideo) ? defaultVideo : defaultImage;
+
+      if (customVisualUrl && typeof customVisualUrl === "string") {
+        if (customVisualUrl.startsWith("data:")) {
+          const match = customVisualUrl.match(/^data:(video|image)\/([a-zA-Z0-9+]+);base64,/);
+          if (match) {
+            let ext = match[2];
+            if (ext === "quicktime") ext = "mov";
+            const base64Data = customVisualUrl.replace(/^data:(video|image)\/[a-zA-Z0-9+]+;base64,/, "");
+            const tempFileName = `temp_visual_${Date.now()}.${ext}`;
+            const tempDir = path.join(process.cwd(), "output", "temp");
+            fs.mkdirSync(tempDir, { recursive: true });
+            const tempFilePath = path.join(tempDir, tempFileName);
+            fs.writeFileSync(tempFilePath, Buffer.from(base64Data, "base64"));
+            bgVisualPath = tempFilePath;
+          }
+        } else if (customVisualUrl.startsWith("/api/video/")) {
+          const assetName = customVisualUrl.split("/").pop();
+          const localAssetPath = path.join(process.cwd(), "public", "videos", assetName);
+          if (fs.existsSync(localAssetPath)) {
+            bgVisualPath = localAssetPath;
+          }
+        }
+      }
 
       const outputFileName = `Seoul_Lofi_${Date.now()}.mp4`;
       const finalMp4Path = path.join(outputDir, outputFileName);
