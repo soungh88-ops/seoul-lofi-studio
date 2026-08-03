@@ -72,6 +72,7 @@ class FFmpegHelper {
         return reject(new Error("No audio tracks provided."));
       }
 
+      const isVideoInput = imagePath.toLowerCase().endsWith(".mp4") || imagePath.toLowerCase().endsWith(".webm") || imagePath.toLowerCase().endsWith(".gif");
       onLog("Starting video rendering process (with 핑퐁 리버스 Seamless Loop Engine)...");
 
       // Calculate exact total duration to prevent infinite loops from hanging -shortest
