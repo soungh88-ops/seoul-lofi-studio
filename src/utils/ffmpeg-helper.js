@@ -167,10 +167,6 @@ class FFmpegHelper {
       }
 
       let finalVideoLabel = baseVideoLabel;
-      if (enableNeonDokkaebi && dokkaebiInputIndex !== -1) {
-        filterComplex += `[${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]; ${baseVideoLabel}[dok_scaled]overlay=40:40[v_dok_over]; `;
-        finalVideoLabel = "[v_dok_over]";
-      }
 
       const trackCount = audioTracks.length;
 
@@ -205,6 +201,27 @@ class FFmpegHelper {
         finalAudioLabel = "[mixed_audio]";
       }
 
+      let mappedAudioLabel = finalAudioLabel;
+      if (enableNeonDokkaebi && dokkaebiInputIndex !== -1) {
+        // Split final audio: one for final render, one for driving showwaves visual
+        filterComplex += `; ${finalAudioLabel}asplit=2[audio_out][audio_wave]`;
+        mappedAudioLabel = "[audio_out]";
+
+        // Generate glowing neon audio spectrum wave (centered line mode, green/cyan glow)
+        filterComplex += `; [audio_wave]showwaves=s=160x160:mode=cline:colors=0x00FF66|0x00FFFF:draw=full[wave]`;
+        filterComplex += `; [wave]format=rgba,colorchannelmixer=aa=0.45[wave_trans]`;
+        
+        // Scale logo & Overlay the pulsing wave and then the logo
+        filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]`;
+        filterComplex += `; ${baseVideoLabel}[wave_trans]overlay=40:40[v_wave_over]`;
+        filterComplex += `; [v_wave_over][dok_scaled]overlay=40:40[v_dok_over]`;
+        finalVideoLabel = "[v_dok_over]";
+      } else if (dokkaebiInputIndex !== -1) {
+        // Simple static overlay if neon is disabled
+        filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]; ${baseVideoLabel}[dok_scaled]overlay=40:40[v_dok_over]`;
+        finalVideoLabel = "[v_dok_over]";
+      }
+
       const complexOption = `-filter_complex "${filterComplex.trim()}"`;
       
       const cmd = [
@@ -212,7 +229,7 @@ class FFmpegHelper {
         cmdInputs.join(" "),
         complexOption,
         `-map "${finalVideoLabel}"`,
-        `-map "${finalAudioLabel}"`,
+        `-map "${mappedAudioLabel}"`,
         `-c:v libx264`,
         `-tune stillimage`,
         `-pix_fmt yuv420p`,
