@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const outputDir = path.join(process.cwd(), "output");
   const libraryPath = path.join(outputDir, "library.json");

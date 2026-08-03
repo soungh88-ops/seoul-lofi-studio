@@ -1007,7 +1007,7 @@ export default function Home() {
 
   const fetchLibrary = async () => {
     try {
-      const res = await fetch("/api/library");
+      const res = await fetch(`/api/library?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         setLibrary(Array.isArray(data) ? data : []);
