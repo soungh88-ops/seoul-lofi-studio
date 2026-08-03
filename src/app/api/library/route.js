@@ -87,7 +87,11 @@ export async function DELETE(request) {
 
     // Physical deletion of video file from disk
     if (fs.existsSync(videoPath)) {
-      fs.unlinkSync(videoPath);
+      try {
+        fs.unlinkSync(videoPath);
+      } catch (e) {
+        console.warn(`Physical delete failed for ${videoName} (might be locked by browser):`, e.message);
+      }
     }
 
     // Remove from library.json
