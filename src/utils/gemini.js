@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 /**
- * Helper to call Gemini for text and SEO generation
+ * Helper to call Gemini for text and SEO generation with authentic Korean Dokkaebi Heritage Philosophy
  */
 class GeminiHelper {
   constructor() {
@@ -43,9 +43,6 @@ class GeminiHelper {
     return this.getGenAI() !== null;
   }
 
-  /**
-   * Helper to run a generation block with automatic key rotation and retries
-   */
   async runWithRetry(fn, fallback = null) {
     const keys = this.getApiKeys();
     let lastError = null;
@@ -59,18 +56,13 @@ class GeminiHelper {
       } catch (err) {
         lastError = err;
         console.warn(`[Gemini execution failed with key index ${this.activeKeyIndex}]:`, err.message || err);
-        // Rotate key and try again if we have more keys
         this.rotateKey();
       }
     }
-    // If all keys fail, return the fallback if provided, or throw
     if (fallback) return fallback;
     throw lastError;
   }
 
-  /**
-   * Dynamically query Google's ListModels API to get the exact working model for this API key.
-   */
   async getWorkingGenerativeModel(genAI) {
     const apiKey = this.getActiveApiKey();
     try {
@@ -89,188 +81,130 @@ class GeminiHelper {
     } catch (e) {
       console.warn("[ListModels lookup warn]:", e.message);
     }
-
-    // Default fallback name
     return genAI.getGenerativeModel({ model: "gemini-flash-latest" });
   }
 
   /**
-   * Generates SEO-optimized YouTube Title, Description, and Tags based on the selected theme for Global English Audiences.
+   * Generates authentic Dokkaebi Heritage YouTube Metadata (Title, Description with Lore Storytelling, Chapters, Tags)
    */
   async generateMetadata({ genre, theme, trackCount = 20, durationHours = 1 }) {
+    const defaultData = {
+      title: `Deep Focus Korean Lofi | ${theme || 'Midnight East Palace & Shamanic Beats'} (Official 1-Hour Loop)`,
+      description: `Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born.
+
+Unlike Japanese Oni, the Korean Dokkaebi belongs to a different cultural tradition. It is an ancient guardian spirit inspired by Bronze Age animism and shamanic lore.
+
+📜 Historical & Cultural Inspiration:
+• Prehistoric & Bronze Age: Inspired by ancient Animism & Shamanism—energy inhabiting nature and daily objects.
+• 1st Century AD: Shamanic records of Dokkaebi worship in Korean history.
+• 600s AD: The legend of Bihyeongrang who commanded Dokkaebis to build stone bridges in one night.
+• 1447 AD: Recorded in Hangeul as 'Dot-gabi' (돗가비)—Master of Prosperity, Fire, and Health.
+
+🔥 Endless Forms of Existence:
+• As Sacred Fire (도깨비불): Floating mystic light driving away bad energy.
+• As Everyday Humans: Walking among people, sharing laughs, and wrestling (씨름) for fun.
+• As Infused Objects: Born from ancient Gayageums, worn-out broomsticks, and tools touched by human warmth.
+• As SOUND & MUSIC: Existing as ethereal lofi beats that clear nightmares and anxiety.
+
+🧹 Pure, Playful, yet Fiercely Just:
+• Generous and warm to good-hearted people.
+• Instantly perceiving evil intentions and delivering swift retribution.
+• Wrestling (씨름) all night for fun, leaving humans dazed holding a worn-out old broomstick at dawn.
+
+🎧 Experience the true living spirit of Korea tonight. A Dokkaebi guardian mask inspired by ancient Korean roof-tile motifs known as gwimyeonwa protects this space. 🛡️✨
+
+🎶 Music composition & audio generation powered by Google Lyria 3.
+📜 Concept, creative direction, track selection, arrangement, worldbuilding & visual production by Dokkaebi Lofi Studio.
+
+#lofi #studybeats #koreanlofi #dokkaebi #deepsleep #focus #shamanism #kculture`,
+      tags: ["lofi", "korean lofi", "dokkaebi lofi", "study beats", "deep sleep", "focus music", "shamanism lofi", "kculture", "donggung lofi"],
+      chapters: Array.from({ length: trackCount }, (_, i) => ({
+        time: `${Math.floor((i * 3) / 60).toString().padStart(2, '0')}:${((i * 3) % 60).toString().padStart(2, '0')}`,
+        title: `Track ${String(i + 1).padStart(2, '0')} - Dokkaebi Heritage Chapter ${i + 1}`
+      })),
+      thumbnails: [
+        { type: "A_Mood", text: "", prompt: "Cozy Korean Hanok room at night, rain falling outside, warm candle light, peaceful lofi aesthetic, NO text" },
+        { type: "B_Contrast", text: "Deep Focus", prompt: "Dark mysterious background with glowing Gayageum or traditional Gat hat in bright orange/yellow tones, striking contrast, bold text" },
+        { type: "C_Character", text: "", prompt: "Close up of a friendly Dokkaebi spirit wearing a Gat hat, smiling softly while working on a scroll, emotional connection, NO text" }
+      ],
+      shortsVisualPrompt: "First 1 second: a close-up of a worn-out old broomstick. Next 2 seconds: smooth cel animation transformation into a majestic Dokkaebi spirit wearing a Gat hat, dancing to a 90 BPM beat."
+    };
+
     return this.runWithRetry(async (genAI) => {
       const model = await this.getWorkingGenerativeModel(genAI);
-      
-      const prompt = `
-        You are an expert YouTube SEO Manager & Algorithm Data Scientist specializing in Global K-Lofi, Dokkaebi Aesthetics, and Solfeggio 432Hz playlist channels targeting international/foreign audiences.
-        Generate 100% English, high-CTR YouTube metadata tailored SPECIFICALLY to the theme: "${theme}".
-        
-        RULES:
-        1. TITLE: High-converting Question / Curiosity Hook title in 100% Native English for global viewers. DO NOT include internal producer tags like "[오늘 수요일 추천]". Must be framed as an intriguing question or sleeper hook (e.g. "[${durationHours} HOUR] What Does a 3 AM Korean Convenience Store Sound Like in Rain? 🌧️ 432Hz Dokkaebi Lofi Beats").
-        2. DESCRIPTION: MUST start with this EXACT sacred channel lore text in fluent American English (do not modify):
-"In ancient Korean lore, the Dokkaebi is a mystical, club-wielding spirit—a fierce protector shielding you from heavy energies. Where a Dokkaebi dwells, stress and bad vibes simply cannot enter.
+      const prompt = `You are the Master Creative Director for "Dokkaebi Lofi" (도깨비 로파이 스튜디오).
+Generate YouTube metadata for theme: "${theme}".
 
-Welcome to K-Dokkaebi Lofi: your digital sanctuary.
+STRICT RULES & BRAND TONE:
+1. Title MUST be Function-first. Format: "[Function] Lofi | [Worldbuilding/Theme Name]" (e.g., "Deep Focus Korean Lofi | Dokkaebi's Night Workshop").
+2. Description MUST include:
+   - Slogan: "Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."
+   - Cultural explanation without hostility (e.g., "Dokkaebi and Oni belong to different cultural traditions").
+   - Mention the 4 forms: Fire, Human, Objects, Music.
+   - Mention "A Dokkaebi guardian mask inspired by ancient Korean roof-tile motifs known as gwimyeonwa."
+   - AI Transparency Clause EXACTLY as:
+     "🎶 Music composition & audio generation powered by Google Lyria 3.\\n📜 Concept, creative direction, track selection, arrangement, worldbuilding & visual production by Dokkaebi Lofi Studio."
+3. NO EXAGGERATED CLAIMS. Do not promise guaranteed wealth or miracle cures. Focus on cultural inspiration and cozy ambiance.
+4. Output strictly valid JSON with keys: 
+   - "title" (string)
+   - "description" (string)
+   - "tags" (array of strings)
+   - "chapters" (array of {time, title})
+   - "thumbnails" (array of 3 objects: {type: 'A_Mood' | 'B_Contrast' | 'C_Character', text: 'up to 3 words or empty', prompt: 'visual description for Midjourney'})
+   - "shortsVisualPrompt" (string: 15-30s hook description, e.g. "First 1s: close up of object. Next 2s: transformation into Dokkaebi.")
 
-Here, this ancient guardian is your late-night guide. We blend 70% modern chillhop and synthwave with 30% breathtaking melodies of traditional Korean instruments to craft a deeply unique sonic landscape.
-
-With a strike of its magical club, the Dokkaebi tunes every track to the healing 432Hz Solfeggio frequency. Rooted in sound psychology, this resonance is designed to stabilize brainwaves, ease an anxious mind, and elevate your mental well-being.
-
-Breathe deep, and let go. As long as you remain here, you are under the Dokkaebi’s protection. Your peace is fully guarded.
-
-🎧 Perfect for: Deep Focus, Coding, Sleep & Clarity.
-🔔 Subscribe, and let the Dokkaebi protect your peace."
-
-           Followed by:
-           - A 2-sentence English mood description matching "${theme}".
-           - Timestamps for all ${trackCount} tracks with 3-minute intervals (00:00 Track 01, 03:00 Track 02...).
-           - Top 10 viral English hashtags (#KoreanLofi #Gayageum #StudyMusic #432Hz #Lofi #Chillhop #FocusBeats #Dokkaebi #SeoulVibes #SleepMusic).
-        3. TAGS: Array or CSV string of 15 top English search keywords (e.g. "korean lofi, dokkaebi lofi, gayageum, 432hz, study music, chillhop, sleep lofi, focus music, seoul vibes").
-        4. TRACKTITLES: An array of exactly ${trackCount} poetic, unique English track titles tailored to "${theme}".
-        5. PINNEDCOMMENT: A warm, protective English Pinned Comment from the Dokkaebi (e.g. "👹 Leave your stress, worries, and heavy thoughts in the comments below. The Dokkaebi will guard them for you tonight. Sleep well, dear listener. 💤").
-        
-        Output JSON with keys: "title", "description", "tags", "trackTitles", "pinnedComment".
-        Output ONLY raw JSON without markdown codeblocks.
-      `;
+JSON:`;
 
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
-      const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
-      return JSON.parse(cleanJson);
-    }, this.getMockMetadata(genre, theme, trackCount, durationHours));
+      const text = result.response.text();
+      const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+      return JSON.parse(cleaned);
+    }, defaultData);
   }
 
   /**
-   * Generates custom prompts for MusicFX
+   * Generates 20-Track Storytelling Prompts with Korean Dokkaebi Lore & Visual Specs
    */
   async generateMusicPrompts({ genre, theme, trackCount = 20 }) {
+    const defaultPrompts = {
+      theme: theme || "Dokkaebi Lofi Shamanic Heritage",
+      prompts: Array.from({ length: trackCount }, (_, i) => ({
+        trackNumber: i + 1,
+        title: `Dokkaebi Heritage Track ${i + 1}`,
+        koreanDescription: `도깨비의 신통력과 액막이 수호가 서린 ${i + 1}번 트랙 연출`,
+        visualPrompt: `80s retro anime style, a friendly Dokkaebi spirit wearing traditional Korean Gat hat and Durumagi robes inside Joseon East Palace room, candle light, incense smoke, Gayageum on floor, night palace window view, NO horns, NO tiger skin, NO Japanese Oni, clean 4k detail`,
+        musicPrompt: `Chill Korean lofi hip hop, 75 bpm, warm vinyl crackle, subtle Gayageum melody, rain sounds, cozy nocturnal mood`
+      }))
+    };
+
     return this.runWithRetry(async (genAI) => {
       const model = await this.getWorkingGenerativeModel(genAI);
-      
-      const prompt = `
-        Generate ${trackCount} distinct loopable MusicFX prompts for genre "${genre}" and theme "${theme}".
-        Output JSON with key "prompts" array.
-        Output ONLY raw JSON.
-      `;
+      const prompt = `You are the Master Music Producer for "Dokkaebi Lofi".
+Generate a ${trackCount}-track storytelling album for theme: "${theme}".
+
+STRICT CONSTITUTIONAL RULES:
+1. Visual Prompts MUST specify:
+   - "80s retro anime style, cel animation"
+   - "Friendly Korean Dokkaebi spirit wearing traditional Gat hat and Durumagi robes"
+   - "NO horns, NO tiger skin, NO Japanese Oni, NO headphones, NO human actors, NO grid lines, clean crystal clear 4k detail"
+   - Add micro-visual variations per track (e.g., blinking eyes, sipping tea, rain to snow, day to night lighting).
+
+2. Music Prompts MUST follow CHARACTER-DRIVEN ARCHITECTURES based on the object spirit:
+   - Brush Spirit (Study/Wisdom): Gayageum, Danso, Piano, paper turning sounds, night rain, 70-75 BPM.
+   - Abacus Spirit (Work/Coding): Yanggeum, Geomungo, Bass, abacus wood percussion, night market ambience, 78-85 BPM.
+   - Gayageum/Feast Spirit (Rest/Comfort): Rich Gayageum, Piri, analog chillhop, candle crackle, 80-88 BPM.
+   - Mask/Broomstick Spirit (Bad Luck Remedy/Dance): Taepyeongso, Janggu, fusion lofi beats, wind/wrestling sounds, 85-90 BPM.
+   - Select ONE of the above 4 architectures that best fits the theme and apply it, creating 20 DISTINCT variations (different melodies, subtle instrument swaps) to avoid repetitive content flags.
+
+3. Output strictly valid JSON with keys: "theme", "prompts" (array of {trackNumber, title, koreanDescription, visualPrompt, musicPrompt}).
+
+JSON:`;
 
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
-      const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
-      return JSON.parse(cleanJson);
-    }, this.getMockMusicPrompts(genre, theme, trackCount));
-  }
-
-  /**
-   * Generates 5 distinct visual prompts dynamically based on the input topic.
-   */
-  async generateImageCandidates({ topic, modelName }) {
-    return this.runWithRetry(async (genAI) => {
-      const model = modelName
-        ? genAI.getGenerativeModel({ model: modelName })
-        : await this.getWorkingGenerativeModel(genAI);
-
-      const promptText = `
-        Generate 5 distinct, highly aesthetic lofi visual concept candidates for topic "${topic}".
-        Return JSON object with key "candidates" array. Each item:
-        {
-          "id": 1,
-          "title": "후보 1: [Short Korean scene title related to ${topic}]",
-          "prompt": "[Detailed Korean description of scene related to ${topic}]",
-          "promptEn": "[Detailed English visual prompt for Imagen 3: lighting, mood, 4k lofi aesthetic, related to ${topic}]"
-        }
-        Output ONLY valid raw JSON without markdown.
-      `;
-
-      const result = await model.generateContent(promptText);
-      const response = await result.response;
-      const text = response.text().trim();
-
-      const cleanJson = text.replace(/^```json/, "").replace(/```$/, "").trim();
-      const parsed = JSON.parse(cleanJson);
-
-      if (parsed.candidates && parsed.candidates.length > 0) {
-        const candidates = parsed.candidates.map((c, idx) => ({
-          id: c.id || idx + 1,
-          title: c.title || `후보 ${idx + 1}: ${topic} 감성 씬`,
-          prompt: c.prompt || `${topic} 분위기의 차분한 4K 로파이 장면`,
-          promptEn: c.promptEn || `${topic} Korean lofi anime aesthetic 4k cinematic`
-        }));
-        return { candidates };
-      }
-      throw new Error("Invalid candidates format from Gemini");
-    }, this.getMockImageCandidates(topic));
-  }
-
-  getMockImageCandidates(topic = "서울 밤거리 로파이") {
-    const cleanTopic = topic.replace(/[^\w\s가-힣]/g, "").trim() || "서울 로파이";
-    
-    return {
-      candidates: [
-        {
-          id: 1,
-          title: `후보 1: ${cleanTopic} - 빗소리 창가 ☔`,
-          prompt: `어두운 자정, ${cleanTopic} 분위기가 감도는 은은한 조명과 비 내리는 창가 서재 4K 장면`,
-          promptEn: `Cozy room window with rain drops outside, ${cleanTopic} mood, warm desk lamp, open book, 4k cinematic lofi anime aesthetic`
-        },
-        {
-          id: 2,
-          title: `후보 2: ${cleanTopic} - 감성 한옥 마루 🏯`,
-          prompt: `${cleanTopic} 테마의 고즈넉한 한옥 대청마루와 은은하게 빛나는 비단 등불 4K`,
-          promptEn: `Traditional Korean Hanok wooden porch at night, ${cleanTopic} vibe, warm glowing paper lantern, 4k lofi aesthetic`
-        },
-        {
-          id: 3,
-          title: `후보 3: ${cleanTopic} - 네온 거리 🌃`,
-          prompt: `${cleanTopic} 감성의 한글 네온사인과 빗물에 반사되는 차분한 밤거리 4K`,
-          promptEn: `Seoul midnight city street with Hangul neon signs reflecting on wet asphalt, ${cleanTopic} mood, 4k lofi anime aesthetic`
-        },
-        {
-          id: 4,
-          title: `후보 4: ${cleanTopic} - 자정 남산뷰 & 한강 🌌`,
-          prompt: `${cleanTopic} 느낌의 남산타워 시티뷰와 자정 한강의 은은한 조명 4K`,
-          promptEn: `Han River and Namsan Tower cityscape view at midnight, ${cleanTopic} atmosphere, 4k lofi aesthetic`
-        },
-        {
-          id: 5,
-          title: `후보 5: ${cleanTopic} - 심야 아날로그 LP ☕`,
-          prompt: `새벽 2시, ${cleanTopic} 음악이 흐르는 LP 레코드 플레이어와 따뜻한 커피 잔 4K`,
-          promptEn: `Vintage vinyl record player spinning, warm coffee cup, ${cleanTopic} room aesthetic, 4k lofi cozy night`
-        }
-      ]
-    };
-  }
-
-  getFallbackImageUrl(themePrompt) {
-    return "https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=1920&q=80";
-  }
-
-  getMockMetadata(genre, theme, trackCount, durationHours) {
-    const defaultTitles = Array.from({ length: trackCount }, (_, i) => `Track ${String(i + 1).padStart(2, "0")}: Whispering Korean Lofi Melodies Pt.${i + 1}`);
-    const timestampsText = defaultTitles.map((t, idx) => {
-      const totalMinutes = idx * 3;
-      const mm = String(totalMinutes % 60).padStart(2, "0");
-      const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-      return `${hh}:${mm} - ${t}`;
-    }).join("\n");
-
-    return {
-      title: `[${durationHours} HOUR] What Does a 3 AM Korean Convenience Store Sound Like in Rain? 🌧️ 432Hz Dokkaebi Lofi Beats`,
-      description: `In ancient Korean lore, the Dokkaebi is a mystical, club-wielding spirit—a fierce protector shielding you from heavy energies. Where a Dokkaebi dwells, stress and bad vibes simply cannot enter.\n\nWelcome to K-Dokkaebi Lofi: your digital sanctuary.\n\nHere, this ancient guardian is your late-night guide. We blend 70% modern chillhop and synthwave with 30% breathtaking melodies of traditional Korean instruments to craft a deeply unique sonic landscape.\n\nWith a strike of its magical club, the Dokkaebi tunes every track to the healing 432Hz Solfeggio frequency. Rooted in sound psychology, this resonance is designed to stabilize brainwaves, ease an anxious mind, and elevate your mental well-being.\n\nBreathe deep, and let go. As long as you remain here, you are under the Dokkaebi’s protection. Your peace is fully guarded.\n\n🎧 Perfect for: Deep Focus, Coding, Sleep & Clarity.\n🔔 Subscribe, and let the Dokkaebi protect your peace.\n\n📌 TRACKLIST TIMESTAMPS:\n${timestampsText}\n\n#KoreanLofi #Gayageum #StudyMusic #432Hz #Lofi #Chillhop #FocusBeats #Dokkaebi #SeoulVibes #SleepMusic`,
-      tags: "korean lofi, dokkaebi lofi, gayageum, 432hz, study music, chillhop, sleep lofi, focus music, seoul vibes, asian lofi",
-      pinnedComment: "👹 Leave your stress, worries, and heavy thoughts in the comments below. The Dokkaebi will guard them for you tonight. Rest well, dear listener. 💤",
-      trackTitles: defaultTitles
-    };
-  }
-
-  getMockMusicPrompts(genre, theme, trackCount) {
-    const list = [
-      "Chill lofi hip hop beat, warm nylon guitar, boom bap drums, loopable, 80 BPM",
-      "Soft emotional piano melody, room reverb, lofi chillhop drums, loopable, 85 BPM"
-    ];
-    const prompts = Array.from({ length: trackCount }, (_, i) => list[i % list.length]);
-    return { prompts };
+      const text = result.response.text();
+      const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+      return JSON.parse(cleaned);
+    }, defaultPrompts);
   }
 }
 

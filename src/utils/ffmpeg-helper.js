@@ -57,6 +57,7 @@ class FFmpegHelper {
     ambientVolume = 0.12,
     audioEffect = "none", // 'none', 'slowed', 'bass'
     enablePingPongLoop = true, // 1등 추천: 핑퐁 리버스 (0초->8초->0초) 무한 무절단 루프 엔진
+    enableNeonDokkaebi = true, // 👹 오디오 반응형 네온 도깨비 스티커
     outputPath,
     onProgress, // callback(percentage)
     onLog // callback(logText)
@@ -124,14 +125,28 @@ class FFmpegHelper {
         ambientInputIndex = 1 + audioTracks.length;
       }
 
+      // Optional Input: Dokkaebi Mascot Sticker Logo
+      const dokkaebiLogoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
+      let dokkaebiInputIndex = -1;
+      if (fs.existsSync(dokkaebiLogoPath)) {
+        cmdInputs.push(`-i "${dokkaebiLogoPath}"`);
+        dokkaebiInputIndex = 1 + audioTracks.length + (ambientPath ? 1 : 0);
+      }
+
       // Build filter_complex
       let filterComplex = "";
-      let finalVideoLabel = "0:v";
+      let baseVideoLabel = "0:v";
 
       // Video Ping-Pong Seamless Reverse Loop filter if video input
       if (isVideoInput && enablePingPongLoop) {
-        filterComplex += `[0:v]split[v_fwd][v_tmp]; [v_tmp]reverse[v_rev]; [v_fwd][v_rev]concat=n=2:v=1:a=0[v_pingpong]; [v_pingpong]loop=loop=-1:size=32767:start=0[final_v]; `;
-        finalVideoLabel = "[final_v]";
+        filterComplex += `[0:v]split[v_fwd][v_tmp]; [v_tmp]reverse[v_rev]; [v_fwd][v_rev]concat=n=2:v=1:a=0[v_pingpong]; [v_pingpong]loop=loop=-1:size=32767:start=0[v_base]; `;
+        baseVideoLabel = "[v_base]";
+      }
+
+      let finalVideoLabel = baseVideoLabel;
+      if (enableNeonDokkaebi && dokkaebiInputIndex !== -1) {
+        filterComplex += `[${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]; ${baseVideoLabel}[dok_scaled]overlay=40:40[v_dok_over]; `;
+        finalVideoLabel = "[v_dok_over]";
       }
 
       const trackCount = audioTracks.length;
@@ -178,6 +193,7 @@ class FFmpegHelper {
         `-c:v libx264`,
         `-tune stillimage`,
         `-pix_fmt yuv420p`,
+        `-movflags +faststart`,
         `-c:a aac`,
         `-b:a 192k`,
         `-shortest`,
@@ -213,10 +229,9 @@ class FFmpegHelper {
       });
 
       proc.on("close", (code) => {
-        // Physical File Verification: Check if output MP4 file exists and has non-zero size (> 100KB)
         const fileCreatedSuccessfully = fs.existsSync(outputPath) && fs.statSync(outputPath).size > 100000;
 
-        if (code === 0 || fileCreatedSuccessfully) {
+        if (code === 0 && fileCreatedSuccessfully) {
           onProgress(100);
           onLog("FFmpeg video rendering completed successfully!");
           resolve(outputPath);

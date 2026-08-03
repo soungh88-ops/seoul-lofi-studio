@@ -1,9 +1,10 @@
+import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { Readable } from "stream";
 
 export async function GET(request, context) {
   try {
-    // Resolve params robustly for all Next.js App Router versions
     const params = await (context.params || {});
     let name = params.name;
 
@@ -13,50 +14,50 @@ export async function GET(request, context) {
     }
 
     name = decodeURIComponent(name);
-    const videoPath = path.join(process.cwd(), "output", name);
 
-    if (!fs.existsSync(videoPath)) {
-      return new Response("Video not found", { status: 404 });
+    const publicVideosDir = path.join(process.cwd(), "public", "videos");
+    const outputDir = path.join(process.cwd(), "output");
+
+    const targetPublicPath = path.join(publicVideosDir, name);
+    const targetOutputPath = path.join(outputDir, name);
+
+    let finalPath = targetPublicPath;
+    if (!fs.existsSync(finalPath)) {
+      if (fs.existsSync(targetOutputPath)) {
+        finalPath = targetOutputPath;
+      } else {
+        return new Response("Video file not found on disk", { status: 404 });
+      }
     }
 
-    const stat = fs.statSync(videoPath);
-    const fileSize = stat.size;
     const range = request.headers.get("range");
+    const fileBuffer = fs.readFileSync(finalPath);
+    const fileSize = fileBuffer.length;
 
-    // Support HTTP range requests for smooth HTML5 video seeking
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunkSize = (end - start) + 1;
-
-      // Read chunk buffer for 100% Web API Response compatibility
-      const fd = fs.openSync(videoPath, "r");
-      const buffer = Buffer.alloc(chunkSize);
-      fs.readSync(fd, buffer, 0, chunkSize, start);
-      fs.closeSync(fd);
-
-      const headers = {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunkSize,
-        "Content-Type": "video/mp4"
-      };
-
-      return new Response(buffer, {
+      const chunksize = (end - start) + 1;
+      const slicedBuffer = fileBuffer.subarray(start, end + 1);
+      
+      return new NextResponse(slicedBuffer, {
         status: 206,
-        headers
+        headers: {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunksize.toString(),
+          "Content-Type": "video/mp4",
+        },
       });
     } else {
-      const buffer = fs.readFileSync(videoPath);
-      const headers = {
-        "Content-Length": fileSize,
-        "Content-Type": "video/mp4"
-      };
-
-      return new Response(buffer, {
+      return new NextResponse(fileBuffer, {
         status: 200,
-        headers
+        headers: {
+          "Content-Length": fileSize.toString(),
+          "Content-Type": "video/mp4",
+          "Accept-Ranges": "bytes",
+        },
       });
     }
   } catch (error) {

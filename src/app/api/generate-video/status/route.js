@@ -17,6 +17,16 @@ export async function GET(request) {
       return NextResponse.json({ error: "name 파라미터가 필요합니다." }, { status: 400 });
     }
 
+    // ── 로컬 FFmpeg 렌더링 즉시 반환 ─────────────────────────────────────────
+    if (operationName.startsWith("local-")) {
+      const fileName = operationName.slice("local-".length);
+      return NextResponse.json({
+        done: true,
+        videoUrl: `/api/video/${encodeURIComponent(fileName)}`,
+        log: "✅ 내 컴퓨터(로컬 FFmpeg) 8초 비디오 렌더링 준비 완료",
+      });
+    }
+
     // ── RunwayML 작업 상태 조회 ──────────────────────────────────────────────
     if (operationName.startsWith("runway-")) {
       const taskId = operationName.slice("runway-".length);
@@ -28,7 +38,7 @@ export async function GET(request) {
 
       console.log(`[video/status] RunwayML 폴링: taskId=${taskId}`);
 
-      const response = await fetch(`https://api.runwayml.com/v1/tasks/${taskId}`, {
+      const response = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "X-Runway-Version": "2024-11-06",

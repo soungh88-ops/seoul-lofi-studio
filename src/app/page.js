@@ -2,6 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { DOKKAEBI_DNA_PRESETS, getDokkaebiDNAById } from "../data/dokkaebi-dna";
+import {
+  generate3PartTitle,
+  generate9StepDescription,
+  generateAiDisclosure,
+  checkProjectSimilarity,
+  get90DayRoadmapData,
+  getQualityChecklist
+} from "../utils/lofi-strategy-engine";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -21,6 +30,15 @@ export default function Home() {
   // Custom User MP3 Music Files State
   const [customAudioFiles, setCustomAudioFiles] = useState([]);
 
+  // 19-Section Strategy Engine States
+  const [showStrategyConsole, setShowStrategyConsole] = useState(false); // Default collapsed for clean UI
+  const [selectedDokkaebiId, setSelectedDokkaebiId] = useState("brush-dokkaebi");
+  const [activeStrategyTab, setActiveStrategyTab] = useState("dna"); // 'dna' | 'similarity' | 'metadata' | 'roadmap'
+  const [similarityResult, setSimilarityResult] = useState(null);
+  const [aiDisclosureLang, setAiDisclosureLang] = useState("en");
+  const [generated3PartTitle, setGenerated3PartTitle] = useState("");
+  const [generated9StepDesc, setGenerated9StepDesc] = useState("");
+
   // Google OAuth Session
   const { data: session, status } = useSession();
   const [aiCheckStatus, setAiCheckStatus] = useState("idle");
@@ -32,10 +50,10 @@ export default function Home() {
       id: 1,
       title: "후보 1: [사이버 도깨비 네온 한옥 스튜디오 딥 스터디 8초 루프]",
       prompt: "어두운 밤, 청색 형광빛 뿔이 빛나는 귀여운 2D 애니메이션 스타일의 사이버 도깨비가 전통 한옥 스튜디오 책상에 앉아 노트북으로 공부하는 로파이 연출 4K",
-      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime illustration style, Studio Ghibli inspired, a cute humanoid cyber-folklore Dokkaebi (Korean goblin) with two small glowing cyan horns on head, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing in a notebook under a warm glowing desk lamp, on the desk is a steaming cup of coffee and a small cute cat sleeping beside the laptop, through the window behind him is the beautiful night view of Namsan Tower and Seoul city lights, character completely still in peaceful study pose, warm ambient lighting, clean 4k, smooth repeating loop",
-      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, cozy 2D lofi anime animation style, Ghibli aesthetic, a cute humanoid cyber-folklore Dokkaebi with glowing cyan horns, sitting at a wooden desk in a cozy Korean hanok studio, writing under a desk lamp, steaming coffee, sleeping cat, Namsan Tower night view through the window, ambient warm lighting, clean 4k, smooth repeating loop",
-      promptKoTranslation: "• A seamless 8-second video loop: 끊김 없는 8초 무한 반복 로파이 애니메이션 영상\n• cozy 2D lofi anime style: 따뜻한 지브리 스타일 2D 로파이 일러스트 아트\n• cute humanoid cyber Dokkaebi with glowing horns: 청색 형광 뿔을 가진 귀여운 사이버 도깨비 캐릭터\n• sitting at desk in hanok: 한옥 책상에 앉아 공부하는 연출\n• Namsan Tower night view through window: 창문 밖으로 남산타워 서울 야경 배경",
-      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, Ghibli aesthetic, an iconic cute humanoid cyber-folklore Dokkaebi with glowing cyan horns, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing under a warm desk lamp, with Namsan Tower night lights visible through the window, detailed, masterwork.",
+      promptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime illustration style, 1980s-1990s hand-painted Korean fantasy animation, retro cel animation, warm analog film texture, a cute humanoid Dokkaebi character with traditional Korean scholar gat and dopo, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing in a notebook under a warm glowing desk lamp, on the desk is a steaming cup of tea and a small cute cat sleeping, through the window behind him is the beautiful night view of Namsan Tower and Seoul city lights, character completely still in peaceful study pose, warm ambient lighting, clean 4k, smooth repeating loop",
+      videoPromptEn: "A seamless 8-second video loop, static locked-off camera, NO camera movement, cozy 2D lofi retro cel animation style, 1980s-1990s hand-painted Korean fantasy aesthetic, a cute humanoid Dokkaebi with traditional gat, sitting at a wooden desk in a cozy Korean hanok studio, writing under a desk lamp, steaming tea, sleeping cat, Namsan Tower night view through window, ambient warm lighting, clean 4k, smooth repeating loop",
+      promptKoTranslation: "• A seamless 8-second video loop: 끊김 없는 8초 무한 반복 로파이 애니메이션 영상\n• cozy 2D lofi retro cel style: 따뜻한 80-90년대 레트로 셀 애니메이션 2D 로파이 일러스트 아트\n• cute humanoid Dokkaebi with traditional gat: 전통 갓과 도포를 착용한 귀여운 도깨비 캐릭터\n• sitting at desk in hanok: 한옥 책상에 앉아 공부하는 연출\n• Namsan Tower night view through window: 창문 밖으로 남산타워 서울 야경 배경",
+      thumbEn: "High resolution YouTube thumbnail, --ar 16:9 --v 6.0, cozy 2D lofi anime illustration art style, 1980s-1990s hand-painted retro cel animation, an iconic cute humanoid Dokkaebi with traditional gat and dopo, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing under a warm desk lamp, with Namsan Tower night lights visible through the window, detailed, masterwork.",
       thumbKoTranslation: "• 16:9 미드저니 썸네일 포맷: 공부하는 사이버 도깨비 2D 로파이 썸네일",
       isAiGenerated: true
     },
@@ -56,7 +74,7 @@ export default function Home() {
   const [isGeneratingMusicPrompts, setIsGeneratingMusicPrompts] = useState(false);
   const [copiedPromptId, setCopiedPromptId] = useState(null);
   const [customKoreanPrompt, setCustomKoreanPrompt] = useState(
-    "어두운 밤, 별이 쏟아지는 깊은 산속 한옥 정자 마당에서 타닥타닥 타오르는 모닥불을 바라보며 아늑하게 해금 연주와 불멍을 즐기는 귀여운 2D 로파이 수호신 캐릭터. 모닥불 연기가 은은하게 밤하늘로 올라가고 있다."
+    "비 내리는 심야, 조선 왕세자의 고즈넉한 동궁(東宮) 마루. 처마 밑으로 빗방울이 은은하게 떨어지고, 비단 등불(자시궁) 아래 정갈한 찻잔과 서책 스크롤이 놓여 있는 100% 아늑한 4K 힐링 국악 로파이 일러스트 배경. (인물 없음, 뿔 없음, 무속 요소 없음)"
   );
 
   const [isSyncingPrompt, setIsSyncingPrompt] = useState(false);
@@ -95,49 +113,14 @@ export default function Home() {
       setIsSyncingPrompt(false);
     }
 
-    // Smart Local Fallback
-    let baseEn = "A seamless 8-second video loop, first frame matches last frame perfectly, static locked-off camera, NO camera movement, NO zoom, cozy 2D lofi anime animation style, Studio Ghibli inspired art style";
-    let characterEn = "a cute humanoid cyber-folklore Dokkaebi (Korean goblin) with two small glowing cyan horns on head";
-    let pronounsEn = "him";
-
-    if (text.includes("소녀") || text.includes("여성") || text.includes("woman") || text.includes("girl")) {
-      characterEn = "a cute modern Korean young adult woman";
-      pronounsEn = "her";
-    } else if (text.includes("백인") || text.includes("Caucasian") || text.includes("서양")) {
-      if (text.includes("남자") || text.includes("소년") || text.includes("남성") || text.includes("man") || text.includes("boy")) {
-        characterEn = "a cute Caucasian young adult man";
-        pronounsEn = "him";
-      } else {
-        characterEn = "a cute Caucasian young adult woman";
-        pronounsEn = "her";
-      }
-    } else if (text.includes("남자") || text.includes("소년") || text.includes("남성")) {
-      characterEn = "a cute modern Korean young adult man";
-      pronounsEn = "him";
-    } else if (text.includes("고양이") || text.includes("cat")) {
-      characterEn = "a cute lofi cat character";
-      pronounsEn = "its";
-    }
-
-    if (text.includes("한옥") || text.includes("hanok")) {
-      baseEn += `, ${characterEn}, sitting at a wooden desk inside a cozy traditional Korean hanok studio, writing in a notebook under a warm glowing desk lamp`;
-    } else {
-      baseEn += `, ${characterEn} resting comfortably in a cozy room, warm ambient lighting`;
-    }
-
-    if (text.includes("고개") || text.includes("까딱") || text.includes("nod")) {
-      baseEn += ", starts in still pose, gently nods once to the beat in the middle, returns to initial still pose at the end";
-    } else {
-      baseEn += ", character completely still in peaceful resting pose, ambient warm lighting, NO sweat, NO steam, NO smoke";
-    }
-
-    baseEn += ", 4k resolution, smooth 2D animation, first frame matches last frame perfectly, perfect repeating loop";
+    // Smart Local Fallback (Clean Donggung Landscape)
+    let baseEn = "Masterpiece K-drama aesthetic Korean Lofi digital illustration of the Crown Prince's Eastern Palace (Donggung) at rain-soaked midnight. Raindrops dripping off ornate traditional Royal Korean palace eaves (Giwa). On the polished dark wood veranda table sits a traditional ceramic tea cup and an open vintage Korean book scroll under a warm silk paper lantern glow. Lotus pond and misty palace courtyard in the background. In the bottom right corner is a subtle antique red Dokkaebi emblem stamp watermark. 4K high detail, warm, cozy, atmospheric, peaceful Lofi digital painting, NO HUMAN CHARACTERS, NO HORNS, NO ONI.";
     setCustomVideoPrompt(baseEn);
     alert("정상적으로 영문 프롬프트에 반영 되었습니다.");
   };
 
   const [customVideoPrompt, setCustomVideoPrompt] = useState(
-    "어두운 밤, 별이 쏟아지는 깊은 산속 한옥 정자 마당에서 타닥타닥 타오르는 모닥불을 바라보며 아늑하게 해금 연주와 불멍을 즐기는 귀여운 2D 로파이 수호신 캐릭터. 모닥불 연기가 은은하게 밤하늘로 올라가고 있다."
+    "Masterpiece K-drama aesthetic Korean Lofi digital illustration of the Crown Prince's Eastern Palace (Donggung) at rain-soaked midnight. Raindrops dripping off ornate traditional Royal Korean palace eaves (Giwa). On the polished dark wood veranda table sits a traditional ceramic tea cup and an open vintage Korean book scroll under a warm silk paper lantern glow. Lotus pond and misty palace courtyard in the background. In the bottom right corner is a subtle antique red Dokkaebi emblem stamp watermark. 4K high detail, warm, cozy, atmospheric, peaceful Lofi digital painting, NO HUMAN CHARACTERS, NO HORNS, NO ONI."
   );
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoLog, setVideoLog] = useState("");
@@ -196,6 +179,7 @@ export default function Home() {
   const todayThemeObj = getTodayThemeObj(initialCalendar);
   const [monthCalendar, setMonthCalendar] = useState(initialCalendar);
   const [topTrendingTheme, setTopTrendingTheme] = useState(todayThemeObj);
+  const [userSelectedTheme, setUserSelectedTheme] = useState(null);
 
   const [chatMessages, setChatMessages] = useState([
     { sender: "ai", text: `안녕하세요 총감독님! 👹 오늘의 유튜브 1위 추천 주제는 [${todayThemeObj.title}]입니다. 100% 영문 알고리즘 질문형 훅 제목과 20곡 서사 앨범이 완벽하게 기획되어 있습니다!` }
@@ -256,35 +240,46 @@ export default function Home() {
 
   // Track Preview & Audio States
   const [activeTrackIndex, setActiveTrackIndex] = useState(null);
-  const [activeTrackModalIndex, setActiveTrackModalIndex] = useState(null); // 한글 연출 확인 팝업 활성화 트랙 인덱스
-  const [editedTrackKoPrompts, setEditedTrackKoPrompts] = useState({}); // 트랙별 수정한 한글 연출 저장
+  const [activeTrackModalIndex, setActiveTrackModalIndex] = useState(null);
+  const [editedTrackKoPrompts, setEditedTrackKoPrompts] = useState({});
+  const [activeVideoModalUrl, setActiveVideoModalUrl] = useState(null);
+  const [playingVideoName, setPlayingVideoName] = useState(null);
   const audioPlayerRef = useRef(null);
 
   const sample20Tracks = Array.from({ length: 20 }, (_, i) => {
     const trackNo = String(i + 1).padStart(2, "0");
-    const baseThemeTitle = topTrendingTheme.title || "국악 로파이";
-    const instName = topTrendingTheme.targetInstruments ? topTrendingTheme.targetInstruments.split("&")[0].trim() : "가야금";
-    const waveName = topTrendingTheme.brainwave ? topTrendingTheme.brainwave.split("+")[0].trim() : "432Hz 힐링 주파수";
 
-    const sampleThemes = [
-      { titleKo: `${baseThemeTitle}의 은은한 서곡`, titleEn: `Moonlight ${instName} Prelude`, instKo: `${instName} & 밤 빗소리`, promptKo: `${baseThemeTitle} 분위기에서 ${instName}과 은은한 밤 빗소리가 아늑하게 어우러지는 수면 힐링 ${waveName} 국악 로파이` },
-      { titleKo: `${baseThemeTitle} 속 해금 선율`, titleEn: `Healing ${instName} Melody`, instKo: "해금 & 피아노", promptKo: `${baseThemeTitle} 테마 속에서 들려오는 따뜻하고 아늑한 해금 피아노 듀엣 수면 공부 로파이 3분 곡` },
-      { titleKo: `${baseThemeTitle}의 자정 수면 음률`, titleEn: `Midnight ${instName} Sleep Wave`, instKo: `${instName} & 숲속 모닥불`, promptKo: `${baseThemeTitle} 깊은 산속 한옥 정자에서 피어오르는 대금 솔페지오 불멍 수면 힐링 ${waveName} 로파이` },
-      { titleKo: `${baseThemeTitle}의 거문고 밤 빗소리`, titleEn: `Midnight Rain ${instName} Sleep Lofi`, instKo: "거문고 & 잔잔한 빗소리", promptKo: `${baseThemeTitle} 공간에서 거문고 선율과 잔잔한 빗소리가 전하는 불면증 극복 국악 로파이` },
-      { titleKo: `${baseThemeTitle}과 도깨비 수면 오르골`, titleEn: `Mystic ${instName} Forest Sleep Box`, instKo: "태평소 & 오르골", promptKo: `${baseThemeTitle} 신비로운 숲속 밤하늘 아래 조용히 퍼지는 ${waveName} 수면 오르골 힐링 로파이` },
-      { titleKo: `${baseThemeTitle}의 몽환적 선율`, titleEn: `Milky Way ${instName} Night`, instKo: "25현 가야금", promptKo: `${baseThemeTitle} 은하수가 가득한 신라 고궁 밤하늘 아래 25현 가야금의 몽환적인 수면 힐링 곡` },
-      { titleKo: `${baseThemeTitle}의 저녁 노을 바람`, titleEn: `Jeju ${instName} Sunset Wind`, instKo: "단소 & 바다 바람소리", promptKo: `${baseThemeTitle} 노을빛 돌담길 억새밭 사이로 시원하게 불어오는 단소 바람소리 힐링 로파이` },
-      { titleKo: `${baseThemeTitle}의 아날로그 LP 감성`, titleEn: `Gyeongseong Vintage ${instName} Lofi`, instKo: "해금 & 재즈 피아노", promptKo: `${baseThemeTitle} 아날로그 다락방에서 LP판으로 듣는 해금 재즈 힐링 로파이` }
+    const uniqueTitles = [
+      { titleKo: "자시(子時) 동궁의 은은한 서곡", titleEn: "Track 01: Midnight Donggung Palace Prelude", instKo: "가야금 & 자정 빗소리", promptKo: "동궁과 월지의 고요한 밤 풍경을 떠올리며, 가야금 선율과 빗소리가 어우러진 평온한 분위기" },
+      { titleKo: "동궁 툇마루 해금 피아노 선율", titleEn: "Track 02: Eastern Palace Veranda Haegeum Melody", instKo: "해금 & 피아노", promptKo: "해금 선율과 피아노 반주가 어우러진 동궁전 툇마루 분위기의 Lofi Chillhop 트랙" },
+      { titleKo: "자정 심야 대금 수면 음률", titleEn: "Track 03: Midnight Daegeum Sleep Wave", instKo: "대금 & 솔페지오 주파수", promptKo: "대금 선율과 솔페지오 주파수가 어우러진 평온한 분위기의 Lofi Chillhop 수면 음악" },
+      { titleKo: "신비로운 궁궐 밤하늘 오르골", titleEn: "Track 04: Mystic Royal Palace Night Box", instKo: "태평소 & 힐링 오르골", promptKo: "태평소의 몽환적인 소리와 힐링 오르골이 어우러진 신비로운 궁궐 분위기" },
+      { titleKo: "은하수 아래 25현 가야금", titleEn: "Track 05: Milky Way 25-String Gayageum", instKo: "25현 가야금", promptKo: "25현 가야금의 영롱한 소리와 432Hz 치유 주파수가 어우러진 은하수 같은 분위기의 수면 음악" },
+      { titleKo: "돌담길 억새밭 단소 바람", titleEn: "Track 06: Stone Wall Wind Danso Serenade", instKo: "단소 & 은은한 바람소리", promptKo: "단소의 맑은 소리와 은은한 바람 소리가 어우러진 돌담길 분위기의 수면 음악" },
+      { titleKo: "아날로그 다락방 LP 해금 재즈", titleEn: "Track 07: Analog Attic LP Haegeum Jazz", instKo: "해금 & 재즈 피아노", promptKo: "해금과 재즈 피아노가 어우러져 아날로그 감성이 묻어나는 다락방 분위기의 수면 음악" },
+      { titleKo: "달빛 연못 미세 잔물결 음률", titleEn: "Track 08: Moonlit Lotus Pond Ripples", instKo: "아쟁 & 풀벌레 소리", promptKo: "아쟁 선율과 풀벌레 소리가 어우러진 달빛 비치는 연못 분위기의 수면 음악" },
+      { titleKo: "비단 등불 아래 따뜻한 찻잔", titleEn: "Track 09: Silk Lantern Warm Tea Cup", instKo: "가야금 & 찻잔 소리", promptKo: "가야금 선율과 찻잔 부딪히는 소리가 따뜻한 차 한 잔의 여유를 선사하는 수면 음악" },
+      { titleKo: "조선 왕세자의 야경 산책길", titleEn: "Track 10: Crown Prince Midnight Stroll", instKo: "피리 & 잔잔한 첼로", promptKo: "피리와 잔잔한 첼로 선율이 어우러진, 한밤중 궁궐을 산책하는 듯한 분위기의 수면 음악" },
+      { titleKo: "자시궁 비단 자리 수면 뇌파", titleEn: "Track 11: Jasigung Silk Bed Sleep Resonance", instKo: "생황 & 델타파 주파수", promptKo: "생황 선율과 델타파 주파수를 활용해 자시궁 비단 침구의 평온한 분위기를 담은 수면 음악" },
+      { titleKo: "경복궁 후원 은빛 이슬 소리", titleEn: "Track 12: Gyeongbokgung Garden Dew Drops", instKo: "양금 & 물방울 소리", promptKo: "경복궁 정원의 이슬방울 소리와 양금 연주가 어우러진 432Hz 주파수 수면 음악" },
+      { titleKo: "서촌 돌담길 조용한 자정 빗소리", titleEn: "Track 13: Seochon Alley Midnight Rain", instKo: "가야금 & 빗소리", promptKo: "서촌 골목길에 내리는 자정의 빗소리와 가야금 선율이 어우러진 평온한 수면 음악" },
+      { titleKo: "창경궁 온실 속 달빛 멜로디", titleEn: "Track 14: Changgyeonggung Greenhouse Moon", instKo: "해금 & 어쿠스틱 기타", promptKo: "해금과 어쿠스틱 기타가 어우러져 창경궁 대온실의 달빛 내리는 밤을 연상케 하는 수면 음악" },
+      { titleKo: "수경재 뜰의 은은한 가야금 선율", titleEn: "Track 15: Sugyeongjae Courtyard Serenade", instKo: "25현 가야금", promptKo: "25현 가야금 선율이 흐르는 수경재 뜰의 고요한 분위기를 담은 수면 음악" },
+      { titleKo: "자정 심야 불면증 극복 국악 힐링", titleEn: "Track 16: Midnight Deep Sleep Healing", instKo: "대금 & 432Hz 힐링파", promptKo: "대금 선율과 432Hz 치유 주파수가 어우러져 깊은 수면을 돕는 평화로운 음악" },
+      { titleKo: "고즈넉한 한옥 마당 수호신 서사", titleEn: "Track 17: Cozy Hanok Guardian Legend", instKo: "거문고 & 피아노", promptKo: "거문고의 깊은 울림과 피아노의 따뜻한 선율이 어우러진 평화로운 한옥 수면 음악" },
+      { titleKo: "새벽 이슬 내려앉는 궁궐 정자", titleEn: "Track 18: Dawn Dew Royal Pavilion", instKo: "단소 & 밤 바람소리", promptKo: "단소 선율과 밤 바람소리가 어우러진 평온한 분위기의 432Hz 힐링 트랙" },
+      { titleKo: "동궁 심야 빗소리 국악 피날레", titleEn: "Track 19: Donggung Midnight Rain Finale", instKo: "풀 앙상블 & 밤 빗소리", promptKo: "동궁의 깊은 밤, 풀벌레 소리와 밤비 내리는 소리가 조화롭게 어우러진 차분한 수면 음악" },
+      { titleKo: "동궁 왕실 침전 야곡 소나타", titleEn: "Track 20: Royal Bedchamber Nocturne Serenade", instKo: "가야금 & 첼로 듀엣", promptKo: "동궁 왕실 침전의 차분하고 온화한 분위기를 담은 수면 로파이 음악" }
     ];
-    const curr = sampleThemes[i % sampleThemes.length];
+    const curr = uniqueTitles[i % uniqueTitles.length];
     return {
       id: i + 1,
       trackNo: trackNo,
-      titleKo: `트랙 ${trackNo}: ${curr.titleKo}`,
-      titleEn: `Track ${trackNo}: ${curr.titleEn}`,
+      titleKo: curr.titleKo,
+      titleEn: curr.titleEn,
       instKo: curr.instKo,
       defaultPromptKo: curr.promptKo,
-      duration: `${trackDurationMinutes}:00`,
+      duration: "3:00",
       url: i % 2 === 0 
         ? "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
         : "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=chill-lofi-song-8444.mp3"
@@ -527,22 +522,119 @@ export default function Home() {
   const [customAudioTracks, setCustomAudioTracks] = useState({}); // { 1: { name, data }, 2: ... }
   const thumbnailFileInputRef = useRef(null);
 
-  const handleSingleTrackUpload = (trackNum, file) => {
+  // IndexedDB Persistence for 20 Audio Tracks
+  const DB_NAME = "DokkaebiLofiAudioDB";
+  const STORE_NAME = "audioTracks";
+
+  const initAudioDB = () => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === "undefined" || !window.indexedDB) return resolve(null);
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      request.onsuccess = (e) => resolve(e.target.result);
+      request.onerror = (e) => reject(e.target.error);
+    });
+  };
+
+  const saveAudioTrackToDB = async (trackNum, trackData) => {
+    try {
+      const db = await initAudioDB();
+      if (!db) return;
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      tx.objectStore(STORE_NAME).put(trackData, Number(trackNum));
+    } catch (err) {
+      console.warn("Failed to save audio to IndexedDB:", err);
+    }
+  };
+
+  const removeAudioTrackFromDB = async (trackNum) => {
+    try {
+      const db = await initAudioDB();
+      if (!db) return;
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      tx.objectStore(STORE_NAME).delete(Number(trackNum));
+    } catch (err) {
+      console.warn("Failed to remove audio from IndexedDB:", err);
+    }
+  };
+
+  const getAudioDuration = (file) => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") return resolve(180);
+      const audio = new Audio();
+      const url = URL.createObjectURL(file);
+      audio.src = url;
+      audio.onloadedmetadata = () => {
+        const dur = Math.round(audio.duration) || 180;
+        URL.revokeObjectURL(url);
+        resolve(dur);
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(180);
+      };
+    });
+  };
+
+  useEffect(() => {
+    fetch("/api/audio-save")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.tracks && Object.keys(data.tracks).length > 0) {
+          const restored = {};
+          Object.keys(data.tracks).forEach(key => {
+            restored[key] = {
+              name: data.tracks[key].name,
+              data: data.tracks[key].url,
+              duration: data.tracks[key].duration || 180
+            };
+          });
+          setCustomAudioTracks(restored);
+        }
+      })
+      .catch(err => console.warn("Failed to load saved audio from disk:", err));
+  }, []);
+
+  const handleSingleTrackUpload = async (trackNum, file) => {
     if (!file) return;
+    const duration = await getAudioDuration(file);
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
+      const base64Data = e.target.result;
+      const trackObj = {
+        name: file.name,
+        data: base64Data,
+        duration: duration
+      };
       setCustomAudioTracks(prev => ({
         ...prev,
-        [trackNum]: {
-          name: file.name,
-          data: e.target.result
-        }
+        [trackNum]: trackObj
       }));
+
+      try {
+        await fetch("/api/audio-save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            trackNum,
+            name: file.name,
+            base64Data,
+            duration
+          })
+        });
+      } catch (err) {
+        console.warn("Disk save failed:", err);
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveTrack = (trackNum) => {
+  const handleRemoveTrack = async (trackNum) => {
     const num = parseInt(trackNum, 10);
     if (isNaN(num)) return;
     setCustomAudioTracks(prev => {
@@ -551,6 +643,11 @@ export default function Home() {
       delete next[String(num)];
       return next;
     });
+
+    try {
+      await fetch(`/api/audio-save?trackNum=${num}`, { method: "DELETE" });
+    } catch (e) {}
+
     if (activeTrackIndex === (num - 1)) {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
@@ -568,8 +665,7 @@ export default function Home() {
     const files = Array.from(filesList);
     let matchedCount = 0;
 
-    files.forEach((file) => {
-      // 파일명 내 1~20 숫자 매칭 (예: 01.mp3, Track_02.wav, Suno_3.mp3 등)
+    files.forEach(async (file) => {
       const numMatch = file.name.match(/(?:track|트랙|_|-|\b|#)0*([1-9]|1[0-9]|20)(?:\D|$)/i);
       let targetSlot = null;
       if (numMatch) {
@@ -579,26 +675,45 @@ export default function Home() {
       if (targetSlot && targetSlot >= 1 && targetSlot <= 20) {
         matchedCount++;
         const slot = targetSlot;
+        const duration = await getAudioDuration(file);
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
+          const base64Data = e.target.result;
+          const trackObj = {
+            name: file.name,
+            data: base64Data,
+            duration: duration
+          };
           setCustomAudioTracks(prev => ({
             ...prev,
-            [slot]: {
-              name: file.name,
-              data: e.target.result
-            }
+            [slot]: trackObj
           }));
+
+          try {
+            await fetch("/api/audio-save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                trackNum: slot,
+                name: file.name,
+                base64Data,
+                duration
+              })
+            });
+          } catch (err) {
+            console.warn("Batch disk save failed:", err);
+          }
         };
         reader.readAsDataURL(file);
       }
     });
 
     if (matchedCount === files.length) {
-      alert(`🟢 총 ${files.length}개 파일의 트랙 번호(01~20)를 인식하여 제자리에 100% 자동 정렬했습니다!`);
+      alert(`🟢 총 ${files.length}개 파일의 트랙 번호(01~20)를 인식하여 하드디스크에 실물 파일로 영구 저장했습니다!`);
     } else if (matchedCount === 0) {
-      alert(`⚠️ 올리신 ${files.length}개 파일 중 트랙 번호(01~20)가 있는 파일이 없어 슬롯에 정렬되지 않았습니다. (0개 정렬됨)\n* 해당 슬롯 카드의 [📂 파일 꽂기] 버튼으로 직접 꽂으실 수 있습니다.`);
+      alert(`⚠️ 올리신 ${files.length}개 파일 중 트랙 번호(01~20)가 있는 파일이 없어 자동 정렬되지 않았습니다.\n* 개별 [📂 파일 꽂기] 버튼으로 수동 첨부하실 수 있습니다.`);
     } else {
-      alert(`🟢 총 ${files.length}개 중 ${matchedCount}개는 지정 트랙 슬롯에 정렬되었고, 트랙 번호가 없는 ${files.length - matchedCount}개 파일은 자동 정렬에서 제외되었습니다.`);
+      alert(`🟢 총 ${files.length}개 중 ${matchedCount}개는 지정 트랙 슬롯에 정렬되어 하드디스크 영구 저장되었고, 트랙 번호가 없는 ${files.length - matchedCount}개 파일은 제외되었습니다.`);
     }
   };
 
@@ -810,7 +925,7 @@ export default function Home() {
     }
   }, []);
 
-  // Poll render status from backend only when rendering is active
+  // Poll render status from backend ONLY when active rendering is in progress
   useEffect(() => {
     if (!isRendering) return;
 
@@ -819,30 +934,21 @@ export default function Home() {
         const res = await fetch("/api/status");
         if (res.ok) {
           const data = await res.json();
-          setRenderStatus(data.status || "idle");
-          setRenderProgress(data.progress || 0);
-          setRenderLog(data.log || "");
-          
-          if (data.status !== "rendering") {
-            setIsRendering(false);
-            if (data.status === "success") {
+          if (data.log) setRenderLog(data.log);
+          if (typeof data.progress === "number") setRenderProgress(data.progress);
+          if (data.status) {
+            setRenderStatus(data.status);
+            if (data.status !== "rendering") {
+              setIsRendering(false);
               fetchLibrary();
-              const usedSecs = targetDurationHours * 3600;
-              setKaggleRemainingSeconds(prev => {
-                const next = Math.max(0, prev - usedSecs);
-                localStorage.setItem("kaggle_remaining_seconds", next);
-                return next;
-              });
             }
           }
         }
-      } catch (e) {
-        // Silent catch during disconnects
-      }
+      } catch (e) {}
     };
 
     fetchStatus();
-    const renderTimer = setInterval(fetchStatus, 3000);
+    const renderTimer = setInterval(fetchStatus, 1000);
     return () => clearInterval(renderTimer);
   }, [isRendering]);
 
@@ -935,34 +1041,35 @@ export default function Home() {
         setTitle(data.metadata.title || `[${targetDurationHours} Hour] ${topTrendingTheme.title}`);
 
         let fullDesc = data.metadata.description;
-        fullDesc += "\n\n🧬 [Sound Science & Brainwave System]\n";
+        fullDesc += `\n\n🔄 Note: This ${targetDurationHours}-Hour Sleep Album consists of 20 master tracks, seamlessly played in a 2-Loop sequence for deep study & sleep.\n\n`;
+        fullDesc += "🧬 [Sound Science & Brainwave System]\n";
         fullDesc += `• Applied Brainwave: ${topTrendingTheme.brainwave}\n`;
         fullDesc += `• Target Korean Instruments: ${topTrendingTheme.targetInstruments}\n`;
         fullDesc += "--------------------------------------------------\n\n";
         fullDesc += "📌 [Tracklist Chapters]\n";
 
-        const rawTrackList = (data.metadata && Array.isArray(data.metadata.trackTitles) && data.metadata.trackTitles.length > 0)
-          ? data.metadata.trackTitles
-          : sample20Tracks.map(t => t.titleEn);
+        let cumulativeSeconds = 0;
+        sample20Tracks.slice(0, 20).forEach((trackItem, i) => {
+          const trackNum = i + 1;
+          const customTrack = customAudioTracks[trackNum];
+          const actualDuration = (customTrack && customTrack.duration) ? Math.round(customTrack.duration) : (trackDurationMinutes * 60);
 
-        const trackTitlesList = rawTrackList.map((tTitle, i) => {
-          if (/[가-힣]/.test(tTitle)) {
-            return sample20Tracks[i % sample20Tracks.length]?.titleEn || `Track ${String(i + 1).padStart(2, "0")}: Whispering Korean Lofi Melodies Pt.${i + 1}`;
-          }
-          return tTitle;
-        });
-
-        trackTitlesList.slice(0, 20).forEach((tTitle, i) => {
-          const totalSeconds = i * (trackDurationMinutes * 60);
-          const mins = Math.floor(totalSeconds / 60);
-          const secs = totalSeconds % 60;
+          const mins = Math.floor(cumulativeSeconds / 60);
+          const secs = cumulativeSeconds % 60;
           const timestamp = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-          fullDesc += `${timestamp} - ${tTitle}\n`;
+
+          const pureEnglishTitle = trackItem.titleEn || `Track ${String(trackNum).padStart(2, "0")}: Korean Lofi Reverie`;
+          fullDesc += `${timestamp} ${pureEnglishTitle}\n`;
+
+          cumulativeSeconds += actualDuration;
         });
 
-        fullDesc += "\n#KoreanLofi #SeoulVibes #StudyMusic #Gayageum #RainySeoul #SoundScience";
+        fullDesc += "\n🤖 [AI Music Disclosure & Concept]\n";
+        fullDesc += generateAiDisclosure("en") + "\n\n";
+        fullDesc += "Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born.\n\n";
+        fullDesc += "#KoreanLofi #DokkaebiLofi #SeoulVibes #StudyMusic #Gayageum #RainySeoul #SoundScience";
         setDescription(fullDesc);
-        setTags((data.metadata.tags || ["lofi", "seoul lofi", "korean lofi", "gayageum", "study music"]).join(", "));
+        setTags((data.metadata.tags || ["lofi", "seoul lofi", "korean lofi", "gayageum", "study music", "dokkaebi lofi"]).join(", "));
       }
     } catch (e) {
       console.error(e);
@@ -999,7 +1106,8 @@ export default function Home() {
           enableRainParticles,
           enableDayToNight,
           enableFilmGrain,
-          enableSmartTitle
+          enableSmartTitle,
+          enableNeonDokkaebi
         })
       });
 
@@ -1377,6 +1485,310 @@ export default function Home() {
         </div>
       </div>
 
+      {/* 👹 [Dokkaebi Master Strategy Console - 19대 마스터 운영 전략 접이식 콘솔] */}
+      <div className="glass-panel" style={{
+        marginBottom: "24px",
+        padding: showStrategyConsole ? "20px" : "12px 20px",
+        border: "1px solid var(--glass-border)",
+        background: "var(--bg-secondary)",
+        borderRadius: "12px"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "18px" }}>👹</span>
+            <div>
+              <h3 style={{ fontSize: "14px", fontWeight: "800", color: "#ffffff", margin: 0 }}>
+                Dokkaebi Operational Strategy Console (도깨비 19대 마스터 전략 시각화)
+              </h3>
+              <p style={{ fontSize: "11px", color: "#888888", margin: "2px 0 0 0" }}>
+                "Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowStrategyConsole(!showStrategyConsole)}
+            style={{
+              padding: "6px 14px",
+              fontSize: "11px",
+              fontWeight: "700",
+              borderRadius: "20px",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: showStrategyConsole ? "rgba(255,255,255,0.15)" : "transparent",
+              color: "#ffffff",
+              cursor: "pointer"
+            }}
+          >
+            {showStrategyConsole ? "▲ 콘솔 접기" : "▼ 마스터 전략 검증 콘솔 열기"}
+          </button>
+        </div>
+
+        {showStrategyConsole && (
+          <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+              <button
+                onClick={() => setActiveStrategyTab("dna")}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  borderRadius: "6px",
+                  border: activeStrategyTab === "dna" ? "1px solid #ffffff" : "1px solid rgba(255,255,255,0.2)",
+                  background: activeStrategyTab === "dna" ? "#ffffff" : "transparent",
+                  color: activeStrategyTab === "dna" ? "#000000" : "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                👹 캐릭터 음악 DNA
+              </button>
+              <button
+                onClick={() => setActiveStrategyTab("similarity")}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  borderRadius: "6px",
+                  border: activeStrategyTab === "similarity" ? "1px solid #ffffff" : "1px solid rgba(255,255,255,0.2)",
+                  background: activeStrategyTab === "similarity" ? "#ffffff" : "transparent",
+                  color: activeStrategyTab === "similarity" ? "#000000" : "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                ⚠️ 유사도 & 16대 점검표
+              </button>
+              <button
+                onClick={() => setActiveStrategyTab("metadata")}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  borderRadius: "6px",
+                  border: activeStrategyTab === "metadata" ? "1px solid #ffffff" : "1px solid rgba(255,255,255,0.2)",
+                  background: activeStrategyTab === "metadata" ? "#ffffff" : "transparent",
+                  color: activeStrategyTab === "metadata" ? "#000000" : "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                📝 3단 타이틀 & 9단계 설명란
+              </button>
+              <button
+                onClick={() => setActiveStrategyTab("roadmap")}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  borderRadius: "6px",
+                  border: activeStrategyTab === "roadmap" ? "1px solid #ffffff" : "1px solid rgba(255,255,255,0.2)",
+                  background: activeStrategyTab === "roadmap" ? "#ffffff" : "transparent",
+                  color: activeStrategyTab === "roadmap" ? "#000000" : "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                📊 90일 주제 선정 로드맵
+              </button>
+            </div>
+
+        {/* Tab 1: Dokkaebi Music DNA */}
+        {activeStrategyTab === "dna" && (
+          <div style={{ background: "rgba(0,0,0,0.4)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
+              {DOKKAEBI_DNA_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => setSelectedDokkaebiId(preset.id)}
+                  style={{
+                    padding: "8px 12px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    borderRadius: "6px",
+                    border: selectedDokkaebiId === preset.id ? "1px solid #a1a1aa" : "1px solid rgba(255,255,255,0.1)",
+                    background: selectedDokkaebiId === preset.id ? "rgba(161, 161, 170, 0.2)" : "rgba(255,255,255,0.05)",
+                    color: "#ffffff",
+                    cursor: "pointer"
+                  }}
+                >
+                  {preset.name}
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const dna = getDokkaebiDNAById(selectedDokkaebiId);
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px", fontSize: "12px" }}>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🎒 출생 물건 (Birth Object)</div>
+                    <div style={{ color: "#ffffff" }}>{dna.birthObject}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🎯 사용 목적 & TPO</div>
+                    <div style={{ color: "#ffffff" }}>{dna.purpose}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🎵 주 악기 / 보조 악기</div>
+                    <div style={{ color: "#ffffff" }}>{dna.primaryInst} | {dna.secondaryInst}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🥁 리듬 & 타악 감성</div>
+                    <div style={{ color: "#ffffff" }}>{dna.rhythm}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🌧️ 환경음 (ASMR Ambience)</div>
+                    <div style={{ color: "#ffffff" }}>{dna.ambientNoise}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>🏯 배경 장소 & 시간대</div>
+                    <div style={{ color: "#ffffff" }}>{dna.backgroundSetting} ({dna.seasonTime})</div>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", background: "rgba(255, 150, 0, 0.08)", border: "1px solid rgba(255, 150, 0, 0.3)", padding: "12px", borderRadius: "6px" }}>
+                    <div style={{ color: "#ffb703", fontWeight: "700", marginBottom: "4px" }}>🤖 Lyria 3 프롬프트 주입 키워드</div>
+                    <div style={{ color: "#ffffff", fontFamily: "monospace" }}>{dna.promptTagEn}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Tab 2: Similarity Checker & 16-point Quality Checklist */}
+        {activeStrategyTab === "similarity" && (
+          <div style={{ background: "rgba(0,0,0,0.4)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h4 style={{ color: "#ffffff", fontSize: "14px", fontWeight: "700" }}>⚠️ 대량생산 방지 유사도 검토 & 16대 마스터 점검표</h4>
+              <button
+                onClick={() => {
+                  const dna = getDokkaebiDNAById(selectedDokkaebiId);
+                  const res = checkProjectSimilarity(
+                    {
+                      characterId: selectedDokkaebiId,
+                      birthObject: dna.birthObject,
+                      purpose: dna.purpose,
+                      primaryInst: dna.primaryInst,
+                      secondaryInst: dna.secondaryInst,
+                      bpmRange: dna.bpmRange,
+                      mood: dna.mood,
+                      backgroundSetting: dna.backgroundSetting,
+                      seasonTime: dna.seasonTime,
+                      ambientNoise: dna.ambientNoise,
+                      artStyleCel: dna.artStyleCel,
+                      promptEn: dna.promptTagEn
+                    },
+                    []
+                  );
+                  setSimilarityResult(res);
+                }}
+                style={{ padding: "6px 12px", fontSize: "11px", fontWeight: "700", background: "rgba(255,255,255,0.1)", border: "1px solid #ffffff", color: "#ffffff", borderRadius: "4px", cursor: "pointer" }}
+              >
+                🔍 현재 설정 프로젝트 검증 실행
+              </button>
+            </div>
+
+            {similarityResult && (
+              <div style={{ padding: "10px", borderRadius: "6px", marginBottom: "14px", background: similarityResult.passed ? "rgba(0, 255, 102, 0.1)" : "rgba(255, 51, 51, 0.1)", border: similarityResult.passed ? "1px solid #00ff66" : "1px solid #ff3333" }}>
+                <div style={{ fontWeight: "700", color: similarityResult.passed ? "#00ff66" : "#ff3333", fontSize: "12px" }}>
+                  {similarityResult.passed ? "✅ 검증 승인: 기존 프로젝트 대비 실질 차이점이 충분합니다!" : "❌ 경고: 기존 프로젝트와 지나치게 유사합니다!"}
+                </div>
+                {similarityResult.warnings.map((w, idx) => (
+                  <div key={idx} style={{ fontSize: "11px", color: "#ffffff", marginTop: "4px" }}>• {w}</div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "8px", maxHeight: "240px", overflowY: "auto" }}>
+              {getQualityChecklist().map((chk, idx) => (
+                <div key={idx} style={{ fontSize: "11px", padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "#00ff66" }}>✔</span>
+                  <span style={{ color: "#a1a1aa", fontWeight: "700" }}>[{chk.category}]</span>
+                  <span style={{ color: "#ffffff" }}>{chk.item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: 3-Part Title & 9-Step Description */}
+        {activeStrategyTab === "metadata" && (
+          <div style={{ background: "rgba(0,0,0,0.4)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+              <button
+                onClick={() => {
+                  const dna = getDokkaebiDNAById(selectedDokkaebiId);
+                  const title3 = generate3PartTitle({
+                    purpose: "Korean Lofi for Deep Work",
+                    koreanGenre: dna.primaryInst.split(",")[0],
+                    loreName: `${dna.nameEn}'s Night Workshop`
+                  });
+                  setGenerated3PartTitle(title3);
+                  setTitle(title3);
+
+                  const desc9 = generate9StepDescription({
+                    title: title3,
+                    purpose: dna.purpose,
+                    characterId: selectedDokkaebiId,
+                    tracklist: Array.from({ length: 12 }, (_, i) => ({ title: `${dna.nameEn} Track ${i + 1}` }))
+                  });
+                  setGenerated9StepDesc(desc9);
+                  setDescription(desc9);
+                }}
+                style={{ padding: "8px 16px", fontSize: "12px", fontWeight: "800", background: "#ffffff", color: "#000000", border: "none", borderRadius: "6px", cursor: "pointer" }}
+              >
+                ✨ 3단 타이틀 & 9단계 설명란 1초 자동 생성 및 메인 폼 적용
+              </button>
+            </div>
+
+            {generated3PartTitle && (
+              <div style={{ marginBottom: "12px" }}>
+                <div style={{ fontSize: "11px", color: "#a1a1aa", fontWeight: "700" }}>🎯 생성된 3단 표준 제목 (Title):</div>
+                <div style={{ fontSize: "13px", color: "#00ff66", fontWeight: "700", marginTop: "2px" }}>{generated3PartTitle}</div>
+              </div>
+            )}
+
+            {generated9StepDesc && (
+              <div>
+                <div style={{ fontSize: "11px", color: "#a1a1aa", fontWeight: "700", marginBottom: "4px" }}>📜 생성된 9단계 마스터 설명란 (Description):</div>
+                <textarea
+                  readOnly
+                  value={generated9StepDesc}
+                  style={{ width: "100%", height: "140px", background: "rgba(0,0,0,0.6)", color: "#e4e4e7", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "monospace" }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 4: 90-Day Operational Roadmap */}
+        {activeStrategyTab === "roadmap" && (
+          <div style={{ background: "rgba(0,0,0,0.4)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            {(() => {
+              const roadmap = get90DayRoadmapData();
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px", fontSize: "12px" }}>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px", borderLeft: "3px solid #00ff66" }}>
+                    <div style={{ color: "#00ff66", fontWeight: "800", fontSize: "13px", marginBottom: "6px" }}>🌱 {roadmap.phase1.days}</div>
+                    <div style={{ color: "#ffffff", marginBottom: "4px" }}>• 목표: {roadmap.phase1.targetVideos}</div>
+                    <div style={{ color: "#a1a1aa", marginBottom: "4px" }}>• 대표 캐릭터: {roadmap.phase1.characterFocus}</div>
+                    <div style={{ color: "#a1a1aa" }}>• 4대 비율: {roadmap.phase1.categoryRatio}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px", borderLeft: "3px solid #ffb703" }}>
+                    <div style={{ color: "#ffb703", fontWeight: "800", fontSize: "13px", marginBottom: "6px" }}>⚡ {roadmap.phase2.days}</div>
+                    <div style={{ color: "#ffffff", marginBottom: "4px" }}>• 목표: {roadmap.phase2.targetVideos}</div>
+                    <div style={{ color: "#a1a1aa", marginBottom: "4px" }}>• 캐릭터: {roadmap.phase2.characterFocus}</div>
+                    <div style={{ color: "#a1a1aa" }}>• 핵심 행동: {roadmap.phase2.keyAction}</div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "6px", borderLeft: "3px solid #3a86ff" }}>
+                    <div style={{ color: "#3a86ff", fontWeight: "800", fontSize: "13px", marginBottom: "6px" }}>🏆 {roadmap.phase3.days}</div>
+                    <div style={{ color: "#ffffff", marginBottom: "4px" }}>• 목표: {roadmap.phase3.targetVideos}</div>
+                    <div style={{ color: "#a1a1aa", marginBottom: "4px" }}>• 대표 IP: {roadmap.phase3.characterFocus}</div>
+                    <div style={{ color: "#a1a1aa" }}>• 핵심 행동: {roadmap.phase3.keyAction}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+          </div>
+        )}
+      </div>
+
       {/* Project Switcher & Multi-Channel Selector Bar */}
       <div className="glass-panel" style={{ 
         marginBottom: "20px", 
@@ -1470,8 +1882,8 @@ export default function Home() {
             
             <div style={{ background: "rgba(161, 161, 170, 0.08)", border: "1px solid rgba(161, 161, 170, 0.3)", borderRadius: "12px", padding: "16px", marginBottom: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: "800", color: "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
-                  🏆 [현재 활성화된 추천 주제]
+                <span style={{ fontSize: "14px", fontWeight: "800", color: userSelectedTheme ? "#00ff66" : "#a1a1aa", display: "flex", alignItems: "center", gap: "6px" }}>
+                  {userSelectedTheme ? "✅ [선택된 주제 적용 중]" : "💡 [오늘의 추천 주제 가이드 (선택 대기중)]"}
                 </span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                   <button
@@ -1522,6 +1934,7 @@ export default function Home() {
                       <div
                         key={idx}
                         onClick={() => {
+                          setUserSelectedTheme(item.title);
                           const targetObj = {
                             title: item.title,
                             enHookTitle: item.enHookTitle,
@@ -1534,15 +1947,13 @@ export default function Home() {
                           setChatMessages([
                             { sender: "ai", text: `안녕하세요 총감독님! 👹 선택하신 주제 [${item.title}]로 대시보드 추천 카드와 AI 프로듀서 채팅이 100% 통일 전환되었습니다! 100% 영문 질문형 훅 제목 [${item.enHookTitle}] 기획이 완벽히 준비되었습니다.` }
                           ]);
-                          let richKoPrompt = `${item.title} 주제에 맞춘 디테일한 2D 로파이 감성 애니메이션 연출. 삼각대 고정 카메라, 움직임 없음, 4K 고화질 루프`;
-                          if (item.title.includes("양머리") || item.title.includes("찜질방") || item.title.includes("목욕탕")) {
-                            richKoPrompt = "흰색 한국 찜질방 양머리 수건(양머리)을 머리에 쓰고 편안한 찜질방 옷을 입은 귀여운 한국 여성 2D 로파이 캐릭터가 포근한 전통 찜질방 휴게실 바닥에 편안하게 휴식을 취하고 있다. 옆에는 빨대 꽂힌 식혜와 맥반석 구운 계란이 정갈하게 놓여 있다.";
+                          let richKoPrompt = `${item.title} 주제에 맞춘 고즈넉한 한국 명소 4K 로파이 감성 일러스트 연출. 인물 없음, 삼각대 고정 카메라, 아늑한 빛과 빗소리 연출, 4K 고화질 루프`;
+                          if (item.title.includes("동궁") || item.title.includes("궁궐") || item.title.includes("조선")) {
+                            richKoPrompt = "비 내리는 심야, 조선 왕세자의 고즈넉한 동궁(東宮) 마루. 처마 밑으로 빗방울이 은은하게 떨어지고, 비단 등불(자시궁) 아래 정갈한 찻잔과 서책 스크롤이 놓여 있는 100% 아늑한 4K 힐링 국악 로파이 일러스트 배경. (인물 없음, 뿔 없음, 무속 요소 없음)";
+                          } else if (item.title.includes("한옥") || item.title.includes("북촌") || item.title.includes("카페")) {
+                            richKoPrompt = "비 내리는 밤, 고즈넉한 북촌 한옥 대청마루 툇마루. 처마 밑 빗소리와 함께 은은하게 빛나는 남산 서울타워 야경, 따뜻한 김이 올라오는 찻잔이 놓인 100% 아늑한 K-로파이 일러스트 배경. (인물 없음)";
                           } else if (item.title.includes("모닥불") || item.title.includes("불멍") || item.title.includes("숲속")) {
-                            richKoPrompt = "어두운 밤, 별이 쏟아지는 깊은 산속 한옥 정자 마당에서 타닥타닥 타오르는 모닥불을 바라보며 아늑하게 해금 연주와 불멍을 즐기는 귀여운 2D 로파이 수호신 캐릭터. 모닥불 연기가 은은하게 밤하늘로 올라가고 있다.";
-                          } else if (item.title.includes("도깨비")) {
-                            richKoPrompt = "네온 조명이 빛나는 신비로운 도깨비 숲속에서 청록색 뿔 and 호화로운 네온 한복 사이버 아머를 입은 귀여운 도깨비 캐릭터가 수호신 방망이를 들고 아늑하게 앉아 있다.";
-                          } else if (item.title.includes("한옥") || item.title.includes("북촌") || item.title.includes("뜰")) {
-                            richKoPrompt = "달빛이 비치는 고즈넉한 한국 한옥 뜰 마루에 앉아 따뜻한 차를 마시며 창밖의 은은한 밤 풍경을 조용히 바라보는 귀여운 2D 로파이 여성 캐릭터.";
+                            richKoPrompt = "별이 쏟아지는 밤, 깊은 산속 한옥 정자 마당에서 타닥타닥 타오르는 모닥불 불멍 배경. 모닥불 연기가 은은하게 밤하늘로 올라가는 아늑한 힐링 일러스트. (인물 없음)";
                           }
                           setCustomKoreanPrompt(richKoPrompt);
                           handleSyncKoreanToEnglishPrompt(richKoPrompt);
@@ -1562,11 +1973,11 @@ export default function Home() {
                           alignItems: "center"
                         }}
                       >
-                        <span style={{ fontWeight: isSelectedItem ? "800" : "700", color: isSelectedItem ? "#a1a1aa" : "#fff" }}>
-                          {item.day}: {item.title} {isSelectedItem ? "🟢 [현재 선택됨]" : ""}
+                        <span style={{ fontWeight: isSelectedItem && userSelectedTheme ? "800" : "700", color: isSelectedItem && userSelectedTheme ? "#00ff66" : "#fff" }}>
+                          {item.day}: {item.title} {isSelectedItem && userSelectedTheme ? "🟢 [선택 완료]" : ""}
                         </span>
-                        <span style={{ fontSize: "11px", color: isSelectedItem ? "#a1a1aa" : "#e2e8f0", background: isSelectedItem ? "rgba(161, 161, 170,0.2)" : "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "4px" }}>
-                          {isSelectedItem ? "✓ 적용중" : "👉 이 주제 선택"}
+                        <span style={{ fontSize: "11px", color: isSelectedItem && userSelectedTheme ? "#00ff66" : "#e2e8f0", background: isSelectedItem && userSelectedTheme ? "rgba(0, 255, 102, 0.15)" : "rgba(255,255,255,0.1)", padding: "4px 10px", borderRadius: "4px", fontWeight: "700" }}>
+                          {isSelectedItem && userSelectedTheme ? "✅ 적용 완료" : "👉 이 주제 선택"}
                         </span>
                       </div>
                     );
@@ -1678,31 +2089,53 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 💾 원클릭 8초 비디오 다운로드 버튼 */}
-            {userMediaUrl && (
-              <div style={{ marginBottom: "14px", display: "flex", justifyContent: "flex-end" }}>
+            {/* Preset 8-Second Video Quick Selector Buttons */}
+            <div style={{ marginBottom: "14px", display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserMediaUrl("/api/video/donggung_palace_rain_8s.mp4");
+                    setUserMediaType("video");
+                    setUserMediaName("동궁_심야_빗소리_8초_루프.mp4");
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: "800",
+                    background: "rgba(0, 255, 102, 0.15)",
+                    border: "1px solid #00ff66",
+                    color: "#00ff66",
+                    borderRadius: "6px",
+                    cursor: "pointer"
+                  }}
+                >
+                  ▶ 8초 동궁 심야 빗소리 비디오 재생
+                </button>
+              </div>
+
+              {userMediaUrl && (
                 <a
                   href={userMediaUrl}
                   download={userMediaName || "lofi_8sec_video.mp4"}
                   style={{
-                    padding: "8px 16px",
-                    fontSize: "12px",
+                    padding: "6px 12px",
+                    fontSize: "11px",
                     fontWeight: "800",
-                    background: "linear-gradient(135deg, #a1a1aa 0%, #00b4d8 100%)",
-                    color: "#000000",
+                    background: "rgba(255,255,255,0.1)",
+                    border: "1px solid #ffffff",
+                    color: "#ffffff",
                     borderRadius: "6px",
                     textDecoration: "none",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "6px",
-                    boxShadow: "0 0 15px rgba(161, 161, 170, 0.4)",
-                    cursor: "pointer"
+                    gap: "4px"
                   }}
                 >
-                  💾 [8초 비디오/자산 파일 내 컴퓨터에 바로 다운로드]
+                  💾 비디오 다운로드
                 </a>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Visual Loop Preview Player */}
             <div style={{
@@ -1832,7 +2265,7 @@ export default function Home() {
                         if (res.ok) {
                           const data = await res.json();
                           const translated = data.translatedVideo || data.translatedImage || "A cozy 2D lofi animation";
-                          const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style";
+                          const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, atmospheric K-illustration lofi aesthetic";
                           const combined = `${translated}, ${fixedConstitution}`;
                           navigator.clipboard.writeText(combined);
                           alert("✅ [한글 지시 번역] + [영문 AI 헌법]이 성공적으로 결합되어 클립보드에 복사되었습니다!");
@@ -1840,7 +2273,7 @@ export default function Home() {
                           throw new Error("Translation failed");
                         }
                       } catch (err) {
-                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style";
+                        const fixedConstitution = "perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, atmospheric K-illustration lofi aesthetic";
                         const combined = `${customKoreanPrompt}, ${fixedConstitution}`;
                         navigator.clipboard.writeText(combined);
                         alert("⚠️ 번역 지연으로 원본 결합 텍스트가 클립보드에 복사되었습니다!");
@@ -1929,7 +2362,7 @@ export default function Home() {
                   lineHeight: "1.4",
                   fontFamily: "var(--font-mono)"
                 }}>
-                  perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, smooth 2D animation style
+                  perfect loop, seamless transition, first and last frame match exactly, static camera angle, locked tripod, no camera movement, 0% zoom-in, no pan, no tilt, no text, no watermark, no logo, NO grid lines, NO scanlines, NO diagonal streaks, clean crystal clear 4k detail, high quality, highly detailed, atmospheric K-illustration lofi aesthetic
                 </div>
               </div>
 
@@ -2337,9 +2770,9 @@ export default function Home() {
                 const hasValidTrack = !!(customTrack && customTrack.data && customTrack.data.length > 0);
                 const isCurrentPlaying = activeTrackIndex === idx;
 
-                const displayTitleKo = promptData?.title || promptData?.titleKo || sampleTrack.titleKo;
-                const displayTitleEn = promptData?.titleEn || sampleTrack.titleEn;
-                const displayPromptKo = editedTrackKoPrompts[trackNum] || promptData?.promptKo || sampleTrack.defaultPromptKo?.replace(/□□/g, "특별") || `${topTrendingTheme.title} 분위기의 힐링 국악 로파이 음원`;
+                const displayTitleKo = sampleTrack.titleKo || promptData?.title || promptData?.titleKo;
+                const displayTitleEn = sampleTrack.titleEn || promptData?.titleEn;
+                const displayPromptKo = editedTrackKoPrompts[trackNum] || sampleTrack.defaultPromptKo || promptData?.promptKo || `${sampleTrack.titleKo} 분위기의 힐링 국악 로파이 음원`;
 
                 return (
                   <div 
@@ -2368,8 +2801,8 @@ export default function Home() {
                       >
                         {hasValidTrack ? `🟢 트랙 ${trackNoStr} 꽂힘` : `⚪ 트랙 ${trackNoStr} 비어있음`}
                       </span>
-                      <span style={{ fontSize: "13px", fontWeight: "800", color: isCurrentPlaying ? "#a1a1aa" : "#ffffff", wordBreak: "break-all" }}>
-                        {displayTitleKo}
+                      <span style={{ fontSize: "13px", fontWeight: "800", color: isCurrentPlaying ? "#00ff66" : "#ffffff", wordBreak: "break-all" }}>
+                        {displayTitleEn}
                       </span>
                     </div>
 
@@ -2430,17 +2863,32 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => {
-                          const cleanTitleSlug = (displayTitleEn || `Track_${trackNoStr}`)
-                            .replace(/^Track\s*\d+\s*:\s*/i, "")
-                            .replace(/[^\w\s]/g, "")
-                            .trim()
-                            .replace(/\s+/g, "_");
-                          const fixedNounTitle = `Track${trackNoStr}_${cleanTitleSlug}`;
-                          const bpmArr = [78, 76, 75, 74, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 58];
-                          const currentBpm = bpmArr[idx % 20];
-                          const fullPromptToCopy = `${fixedNounTitle}, 3-minute full length composition (180s duration), 70% Western Lo-Fi Chillhop + 30% Korean Instrument Fusion, ${currentBpm} BPM, 432Hz Solfeggio, Warm Reverb`;
-                          handleCopyPrompt(fullPromptToCopy, `m_${trackNum}`);
-                          alert(`📋 [${fixedNounTitle}] 고유 명사구 3분 프롬프트가 복사되었습니다!`);
+                          const userLyria3Prompts = [
+                            "Midnight Donggung Palace Prelude, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 가야금 & 자정 빗소리, Slow Tempo (75 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Eastern Palace Veranda Haegeum Melody, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 해금 & 피아노, Slow Tempo (74 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Midnight Daegeum Sleep Wave, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 대금 & 솔페지오 주파수, Slow Tempo (73 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Mystic Royal Palace Night Box, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 태평소 & 힐링 오르골, Slow Tempo (71 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Milky Way 25-String Gayageum, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 25현 가야금, Slow Tempo (70 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Stone Wall Wind Danso Serenade, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 단소 & 은은한 바람소리, Slow Tempo (69 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Analog Attic LP Haegeum Jazz, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 해금 & 재즈 피아노, Slow Tempo (68 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Moonlit Lotus Pond Ripples, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 아쟁 & 풀벌레 소리, Slow Tempo (67 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Silk Lantern Warm Tea Cup, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 가야금 & 찻잔 소리, Slow Tempo (66 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Crown Prince Midnight Stroll, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 피리 & 잔잔한 첼로, Slow Tempo (65 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Jasigung Silk Bed Sleep Resonance, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 생황 & 델타파 주파수, Slow Tempo (64 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Gyeongbokgung Garden Dew Drops, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 양금 & 물방울 소리, Slow Tempo (63 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Seochon Alley Midnight Rain, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 가야금 & 빗소리, Slow Tempo (62 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Changgyeonggung Greenhouse Moon, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 해금 & 어쿠스틱 기타, Slow Tempo (61 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Sugyeongjae Courtyard Serenade, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 25현 가야금, Slow Tempo (60 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Midnight Deep Sleep Healing, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 대금 & 432Hz 힐링파, Slow Tempo (59 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Cozy Hanok Guardian Legend, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 거문고 & 피아노, Slow Tempo (58 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Dawn Dew Royal Pavilion, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 단소 & 밤 바람소리, Slow Tempo (57 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Donggung Midnight Rain Finale, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 풀 앙상블 & 밤 빗소리, Slow Tempo (56 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music",
+                            "Royal Bedchamber Nocturne Serenade, Traditional Korean Lofi Chillhop, 432Hz Healing Frequency, 가야금 & 첼로 듀엣, Slow Tempo (55 BPM), Peaceful Ambient Reverie, 3-minute full length sleep music"
+                          ];
+                          const lyria3PromptToCopy = userLyria3Prompts[idx % userLyria3Prompts.length];
+                          
+                          handleCopyPrompt(lyria3PromptToCopy, `m_${trackNum}`);
+                          alert(`✅ [${displayTitleEn}] 총감독님 전용 Lyria3 음악 프롬프트가 복사되었습니다!\n\n📋 복사된 프롬프트:\n"${lyria3PromptToCopy}"`);
                         }}
                         style={{
                           padding: "4px 8px",
@@ -2454,7 +2902,7 @@ export default function Home() {
                           whiteSpace: "nowrap"
                         }}
                       >
-                        {copiedPromptId === `m_${trackNum}` ? "✓ 복사완료!" : `📋 트랙 ${trackNoStr} 프롬프트 복사`}
+                        {copiedPromptId === `m_${trackNum}` ? "✓ 복사완료!" : `📋 트랙 ${trackNoStr} Lyria3 음악 프롬프트 복사`}
                       </button>
 
                       <label style={{
@@ -3201,9 +3649,19 @@ export default function Home() {
 
           {/* Completed Video Library */}
           <div className="glass-panel" style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "350px" }}>
-            <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "14px" }}>
-              📦 완성된 비디오 보관함 & 유튜브 게시판
-            </h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "8px" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                📦 완성된 비디오 보관함 & 유튜브 게시판
+              </h2>
+              <button
+                type="button"
+                onClick={fetchLibrary}
+                className="btn-primary"
+                style={{ padding: "6px 14px", fontSize: "12px", background: "#00ff66", color: "#000", fontWeight: "900", cursor: "pointer", border: "none", borderRadius: "6px" }}
+              >
+                🔄 렌더링 파일 목록 불러오기 / 새로고침
+              </button>
+            </div>
 
             {uploadStatus !== "idle" && (
               <div style={{ background: "rgba(10, 6, 18, 0.9)", border: "1px solid var(--accent-pink)", padding: "16px", borderRadius: "10px", marginBottom: "16px" }}>
@@ -3227,28 +3685,30 @@ export default function Home() {
               </div>
             )}
 
-            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", maxHeight: "300px" }}>
+            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "650px" }}>
               {library.length === 0 ? (
                 <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px 0", fontSize: "13px" }}>
                   No videos rendered yet. Use the left wizard panel to generate your first Lofi video track!
                 </div>
               ) : (
                 library.map((video, idx) => (
-                  <div key={video.id || `${video.name}-${idx}`} style={{ border: "1px solid var(--glass-border)", borderRadius: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: "600" }}>{video.name}</div>
-                      <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{(video.size / (1024 * 1024)).toFixed(1)} MB</div>
-                    </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <a href={`/api/video/${video.name}`} target="_blank" rel="noreferrer" className="btn-secondary" style={{ padding: "6px 10px", fontSize: "12px" }}>
-                        ▶️ 보기
-                      </a>
-                      <button onClick={() => handleStartUpload(video)} className="btn-primary" disabled={!isYouTubeConnected || uploadStatus === "uploading"} style={{ padding: "6px 10px", fontSize: "12px" }}>
-                        🚀 유튜브 게시
-                      </button>
-                      <button onClick={() => handleDeleteVideo(video.name)} className="btn-secondary" style={{ padding: "6px 10px", fontSize: "12px", color: "#ff4d6d" }}>
-                        🗑️
-                      </button>
+                  <div key={video.id || `${video.name}-${idx}`} style={{ border: "1px solid var(--glass-border)", borderRadius: "10px", padding: "16px", background: "rgba(255,255,255,0.02)", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                      <div>
+                        <div style={{ fontSize: "14px", fontWeight: "800", color: "#00ff66" }}>🎬 {video.name}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{video.theme || video.genre} | {(video.size / (1024 * 1024)).toFixed(1)} MB</div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <a href={`/api/video/${encodeURIComponent(video.name)}`} target="_blank" rel="noreferrer" className="btn-secondary" style={{ padding: "6px 12px", fontSize: "12px" }}>
+                          ▶️ 보기
+                        </a>
+                        <button onClick={() => handleStartUpload(video)} className="btn-primary" disabled={!isYouTubeConnected || uploadStatus === "uploading"} style={{ padding: "6px 12px", fontSize: "12px" }}>
+                          🚀 유튜브 게시
+                        </button>
+                        <button onClick={() => handleDeleteVideo(video.name)} className="btn-secondary" style={{ padding: "6px 12px", fontSize: "12px", color: "#ff4d6d" }}>
+                          🗑️ 삭제
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -3258,7 +3718,6 @@ export default function Home() {
 
         </div>
       </div>
-
       {/* 🔍 [한글 연출 확인] 팝업 모달 오버레이 */}
       {activeTrackModalIndex !== null && (
         <div style={{

@@ -5,7 +5,6 @@ import { exec } from "child_process";
 const ffmpegHelper = require("@/utils/ffmpeg-helper");
 const geminiHelper = require("@/utils/gemini");
 import { aiVideoHelper } from "@/utils/ai-video";
-const kaggleHelper = require("@/utils/kaggle-helper");
 
 // Helper to download a URL to a local file
 async function downloadFile(url, destPath) {
@@ -215,44 +214,80 @@ export async function POST(request) {
     };
 
     try {
-      log(`Setting up Kaggle Cloud rendering pipeline.`);
+      log(`Setting up Local FFmpeg 4K rendering pipeline.`);
       log(`Selected Genre: ${genre}, Theme: ${theme}`);
 
-      const realLofiTracks = [
-        "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3",
-        "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=chill-lofi-song-8444.mp3",
-        "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a77d54.mp3?filename=lofi-hip-hop-10332.mp3"
-      ];
-      
-      const audioUrls = [];
       const customTracks = body.customTracks || {};
-      const totalTracks = isTestMode ? 2 : 20;
+      const totalTracks = isTestMode ? 2 : (trackCount || 20);
+      const resolvedAudioPaths = [];
+
       for (let i = 0; i < totalTracks; i++) {
         const trackNum = i + 1;
-        const customData = customTracks[trackNum] || customTracks[i];
-        if (customData && customData.startsWith("http")) {
-          audioUrls.push(customData);
+        const numStr = String(trackNum).padStart(2, "0");
+        const diskPath = path.join(process.cwd(), "public", "audio", `custom_track_${numStr}.mp3`);
+
+        const customItem = customTracks[trackNum] || customTracks[String(trackNum)] || customTracks[i];
+        let customUrl = null;
+        if (typeof customItem === "string") {
+          customUrl = customItem;
+        } else if (customItem && typeof customItem === "object") {
+          customUrl = customItem.url || customItem.data;
+        }
+
+        if (fs.existsSync(diskPath)) {
+          resolvedAudioPaths.push(diskPath);
+        } else if (customUrl && typeof customUrl === "string" && customUrl.startsWith("data:audio")) {
+          const base64Clean = customUrl.replace(/^data:audio\/[a-zA-Z0-9]+;base64,/, "");
+          fs.writeFileSync(diskPath, Buffer.from(base64Clean, "base64"));
+          resolvedAudioPaths.push(diskPath);
+        } else if (customUrl && typeof customUrl === "string" && customUrl.startsWith("http")) {
+          resolvedAudioPaths.push(customUrl);
         } else {
-          audioUrls.push(realLofiTracks[i % realLofiTracks.length]);
+          const sampleMp3 = path.join(process.cwd(), "public", "audio", `sample_track_${(i % 3) + 1}.mp3`);
+          if (!fs.existsSync(sampleMp3)) {
+            await generateSynthesizedTrack(sampleMp3, 180, i);
+          }
+          resolvedAudioPaths.push(sampleMp3);
         }
       }
 
-      log("Pushing script and parameters to Kaggle for 8-sec Veo loop generation, rendering, and uploading...");
-      const pushResult = await kaggleHelper.pushRenderKernel({
-        title: `Seoul-Lofi-${theme.replace(/[^a-zA-Z0-9]/g, "-")}`,
-        durationHours: durationHours,
-        veoPrompt: `A 16:9 lo-fi anime illustration of ${theme}, warm lighting, aesthetic, 4k, looping`,
-        audioUrls: audioUrls
+      // Determine local visual background video
+      const defaultVideo = path.join(process.cwd(), "public", "videos", "donggung_palace_rain_8s.mp4");
+      const defaultImage = path.join(process.cwd(), "public", "donggung_palace_rain_master.jpg");
+      const bgVisualPath = fs.existsSync(defaultVideo) ? defaultVideo : defaultImage;
+
+      const outputFileName = `Seoul_Lofi_${Date.now()}.mp4`;
+      const finalMp4Path = path.join(outputDir, outputFileName);
+
+      const enableNeonDokkaebi = body.enableNeonDokkaebi !== false;
+      log("Executing Local FFmpeg Seamless 4K Renderer...");
+      await ffmpegHelper.renderVideo({
+        imagePath: bgVisualPath,
+        audioTracks: resolvedAudioPaths,
+        ambientType: ambientType,
+        ambientVolume: ambientVolume,
+        audioEffect: audioEffect,
+        enableNeonDokkaebi: enableNeonDokkaebi,
+        outputPath: finalMp4Path,
+        onProgress: (p) => {
+          log(`Local Render Progress: ${p}%`);
+        },
+        onLog: (l) => log(l)
       });
 
-      log(`Kaggle job successfully started!`);
-      log(`Track it here: ${pushResult.url}`);
+      // Copy finished MP4 to public/videos/ for 100% instant native webview streaming
+      const publicVideoPath = path.join(process.cwd(), "public", "videos", outputFileName);
+      try {
+        fs.copyFileSync(finalMp4Path, publicVideoPath);
+      } catch (e) {
+        console.warn("Failed to copy to public/videos:", e);
+      }
 
       const finalStatus = {
         status: "success",
         progress: 100,
-        videoPath: pushResult.url,
-        videoName: `Kaggle Job: ${theme}`,
+        videoPath: `/videos/${outputFileName}`,
+        videoName: outputFileName,
         log: logs.join("\n")
       };
       fs.writeFileSync(statusPath, JSON.stringify(finalStatus, null, 2), "utf-8");
@@ -269,8 +304,8 @@ export async function POST(request) {
       }
       library.unshift({
         id: Date.now().toString(),
-        name: `Kaggle Job: ${theme}`,
-        path: pushResult.url,
+        name: outputFileName,
+        path: `/videos/${outputFileName}`,
         createdAt: new Date().toISOString(),
         genre,
         theme,
