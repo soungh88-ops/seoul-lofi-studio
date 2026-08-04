@@ -315,6 +315,17 @@ class FFmpegHelper {
       // Ensure output directory exists
       fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
+      // Copy font file to project root for bulletproof relative path loading in FFmpeg
+      const localFontPath = path.join(process.cwd(), "arial.ttf");
+      if (!fs.existsSync(localFontPath)) {
+        try {
+          fs.copyFileSync("C:\\Windows\\Fonts\\arial.ttf", localFontPath);
+          onLog("Copied system Arial font to project root for FFmpeg relative path loading.");
+        } catch (e) {
+          onLog(`Warning: Failed to copy system font: ${e.message}`);
+        }
+      }
+
       const vfFilters = [
         `crop=in_h*9/16:in_h`,
         `noise=alls=6:allf=t+u`
@@ -323,7 +334,9 @@ class FFmpegHelper {
       if (hookText) {
         // Escape single quotes for drawtext filter and force lowercase
         const escapedText = hookText.replace(/'/g, "'\\''").toLowerCase();
-        vfFilters.push(`drawtext=text='${escapedText}':fontfile='C\\\\:/Windows/Fonts/arial.ttf':x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
+        // Use relative path to avoid colon and backslash issues on Windows
+        const fontParam = fs.existsSync(localFontPath) ? "fontfile='arial.ttf'" : "font='Arial'";
+        vfFilters.push(`drawtext=text='${escapedText}':${fontParam}:x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
       }
 
       const cmd = [
