@@ -87,9 +87,9 @@ class GeminiHelper {
   /**
    * Generates authentic Dokkaebi Heritage YouTube Metadata (Title, Description with Lore Storytelling, Chapters, Tags)
    */
-  async generateMetadata({ genre, theme, trackCount = 20, durationHours = 1 }) {
+  async generateMetadata({ genre, theme, enHookTitle, trackCount = 20, durationHours = 1 }) {
     const defaultData = {
-      title: `Deep Focus Korean Lofi | ${theme || 'Midnight East Palace & Shamanic Beats'} (Official 1-Hour Loop)`,
+      title: `Deep Focus Korean Lofi | ${enHookTitle || theme || 'Midnight East Palace & Shamanic Beats'} (Official ${durationHours}-Hour Loop)`,
       description: `Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born.
 
 Unlike Japanese Oni, the Korean Dokkaebi belongs to a different cultural tradition. It is an ancient guardian spirit inspired by Bronze Age animism and shamanic lore.
@@ -133,19 +133,20 @@ Unlike Japanese Oni, the Korean Dokkaebi belongs to a different cultural traditi
     return this.runWithRetry(async (genAI) => {
       const model = await this.getWorkingGenerativeModel(genAI);
       const prompt = `You are the Master Creative Director for "Dokkaebi Lofi" (도깨비 로파이 스튜디오).
-Generate YouTube metadata for theme: "${theme}".
+Generate YouTube metadata for theme: "${enHookTitle || theme}".
 
 STRICT RULES & BRAND TONE:
 1. Title MUST be Function-first. Format: "[Function] Lofi | [Worldbuilding/Theme Name]" (e.g., "Deep Focus Korean Lofi | Dokkaebi's Night Workshop").
-2. Description MUST include:
+2. ALL output fields (title, description, tags, thumbnails, and prompts) MUST be written in 100% English. DO NOT use any Korean (Hangul) characters under any circumstances. If the input theme is in Korean, translate it to English.
+3. Description MUST include:
    - Slogan: "Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."
    - Cultural explanation without hostility (e.g., "Dokkaebi and Oni belong to different cultural traditions").
    - Mention the 4 forms: Fire, Human, Objects, Music.
    - Mention "A Dokkaebi guardian mask inspired by ancient Korean roof-tile motifs known as gwimyeonwa."
    - AI Transparency Clause EXACTLY as:
-     "🎶 Music composition & audio generation powered by Google Lyria 3.\\n📜 Concept, creative direction, track selection, arrangement, worldbuilding & visual production by Dokkaebi Lofi Studio."
-3. NO EXAGGERATED CLAIMS. Do not promise guaranteed wealth or miracle cures. Focus on cultural inspiration and cozy ambiance.
-4. Output strictly valid JSON with keys: 
+     "🎶 Music composition & audio generation powered by Google Lyria 3.\n📜 Concept, creative direction, track selection, arrangement, worldbuilding & visual production by Dokkaebi Lofi Studio."
+4. NO EXAGGERATED CLAIMS. Do not promise guaranteed wealth or miracle cures. Focus on cultural inspiration and cozy ambiance.
+5. Output strictly valid JSON with keys: 
    - "title" (string)
    - "description" (string)
    - "tags" (array of strings)

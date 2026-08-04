@@ -1050,6 +1050,7 @@ export default function Home() {
         body: JSON.stringify({
           genre: "Seoul Lofi Reverie / Traditional Gugak & Chillhop",
           theme: topTrendingTheme.title,
+          enHookTitle: topTrendingTheme.enHookTitle,
           trackCount: isTestMode ? 2 : 20,
           durationHours: targetDurationHours
         })

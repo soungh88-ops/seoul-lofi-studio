@@ -5,7 +5,7 @@ const youtubeHelper = require("@/utils/youtube-helper");
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { genre, theme, trackCount = 20, durationHours = 1 } = body;
+    const { genre, theme, enHookTitle, trackCount = 20, durationHours = 1 } = body;
 
     const isYouTubeConnected = youtubeHelper.isAuthenticated();
 
@@ -25,6 +25,7 @@ export async function POST(request) {
     const metadata = await geminiHelper.generateMetadata({
       genre,
       theme,
+      enHookTitle,
       trackCount,
       durationHours
     });
