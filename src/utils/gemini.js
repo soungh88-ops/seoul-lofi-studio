@@ -88,8 +88,13 @@ class GeminiHelper {
    * Generates authentic Dokkaebi Heritage YouTube Metadata (Title, Description with Lore Storytelling, Chapters, Tags)
    */
   async generateMetadata({ genre, theme, enHookTitle, trackCount = 20, durationHours = 1 }) {
+    const cleanTitle = (enHookTitle || theme || 'Gayageum Lofi')
+      .replace(/\[?\d+\s*HOURS?\]?/gi, "")
+      .replace(/Lofi/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
     const defaultData = {
-      title: `Deep Focus Korean Lofi | ${enHookTitle || theme || 'Midnight East Palace & Shamanic Beats'} (Official ${durationHours}-Hour Loop)`,
+      title: `Cozy Cafe Rain Ambiance ☕ ${cleanTitle} Lofi | Dokkaebi Lofi [${durationHours} HOURS]`,
       description: `Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born.
 
 Unlike Japanese Oni, the Korean Dokkaebi belongs to a different cultural tradition. It is an ancient guardian spirit inspired by Bronze Age animism and shamanic lore.
@@ -136,7 +141,7 @@ Unlike Japanese Oni, the Korean Dokkaebi belongs to a different cultural traditi
 Generate YouTube metadata for theme: "${enHookTitle || theme}".
 
 STRICT RULES & BRAND TONE:
-1. Title MUST be Function-first. Format: "[Function] Lofi | [Worldbuilding/Theme Name]" (e.g., "Deep Focus Korean Lofi | Dokkaebi's Night Workshop").
+1. Title structure MUST follow this exact hybrid format: "[Universal Search Keywords + Translated Instrument Name] | Dokkaebi Lofi [${durationHours} HOURS]". The first part (before the pipe |) MUST consist of high-volume, broad English search keywords (e.g., Cozy Cafe Rain, Study Lofi, Chill Beats, Relaxing Music) combined with the translated traditional instrument name (e.g., Gayageum Zither, Haegeum Fiddle, Daegeum Flute). Do NOT use obscure Korean cultural words in the first part. The part after the pipe MUST be exactly: "| Dokkaebi Lofi [${durationHours} HOURS]". The total title length must be between 80 and 95 characters.
 2. ALL output fields (title, description, tags, thumbnails, and prompts) MUST be written in 100% English. DO NOT use any Korean (Hangul) characters under any circumstances. If the input theme is in Korean, translate it to English.
 3. Description MUST include:
    - Slogan: "Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."
