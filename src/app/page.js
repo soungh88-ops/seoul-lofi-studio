@@ -2235,8 +2235,8 @@ export default function Home() {
                     position: "absolute",
                     top: "15px",
                     left: "15px",
-                    width: "85px",
-                    height: "85px",
+                    width: "120px",
+                    height: "120px",
                     pointerEvents: "none",
                     display: "flex",
                     alignItems: "center",
@@ -2259,9 +2259,14 @@ export default function Home() {
                   />
 
                   {/* Layer 2: Main Dokkaebi Image with dynamic drop-shadows & brightness */}
-                  <img 
-                    src="/dokkaebi_logo.png" 
-                    alt="Neon Dokkaebi Sticker" 
+                  <video
+                    src="/dokkaebi_reactive_sticker.webm"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    onLoadedData={(event) => event.currentTarget.play().catch(() => {})}
                     style={{
                       width: "100%",
                       height: "100%",
