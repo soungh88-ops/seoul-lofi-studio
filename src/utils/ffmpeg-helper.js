@@ -323,7 +323,7 @@ class FFmpegHelper {
       if (hookText) {
         // Escape single quotes for drawtext filter and force lowercase
         const escapedText = hookText.replace(/'/g, "'\\''").toLowerCase();
-        vfFilters.push(`drawtext=text='${escapedText}':font='Arial':x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
+        vfFilters.push(`drawtext=text='${escapedText}':fontfile='C\\\\:/Windows/Fonts/arial.ttf':x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
       }
 
       const cmd = [
