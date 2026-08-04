@@ -298,6 +298,84 @@ class FFmpegHelper {
       });
     });
   }
+
+  /**
+   * Cuts and crops a 15-second vertical (9:16) Shorts video from a completed long-form video,
+   * applying low-contrast analog color grain texture and an aesthetic lowercase hook text overlay.
+   */
+  renderShortVideo({ longVideoPath, startTime, duration = 15, hookText = "", outputPath, onProgress, onLog }) {
+    return new Promise((resolve, reject) => {
+      const fs = require("fs");
+      const path = require("path");
+
+      if (!fs.existsSync(longVideoPath)) {
+        return reject(new Error(`Long-form video not found at ${longVideoPath}`));
+      }
+
+      // Ensure output directory exists
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+      const vfFilters = [
+        `crop=in_h*9/16:in_h`,
+        `noise=alls=6:allf=t+u`
+      ];
+
+      if (hookText) {
+        // Escape single quotes for drawtext filter and force lowercase
+        const escapedText = hookText.replace(/'/g, "'\\''").toLowerCase();
+        vfFilters.push(`drawtext=text='${escapedText}':font='Arial':x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
+      }
+
+      const cmd = [
+        this.ffmpegPath,
+        `-ss ${startTime}`,
+        `-t ${duration}`,
+        `-i "${longVideoPath}"`,
+        `-vf "${vfFilters.join(",")}"`,
+        `-c:v libx264`,
+        `-tune stillimage`,
+        `-pix_fmt yuv420p`,
+        `-c:a aac`,
+        `-b:a 192k`,
+        `-y`,
+        `"${outputPath}"`
+      ].join(" ");
+
+      onLog(`Running FFmpeg Shorts command:\n${cmd}`);
+
+      const proc = exec(cmd, { maxBuffer: 1024 * 1024 * 50 });
+
+      proc.stdout.on("data", (data) => {
+        onLog(data.toString());
+      });
+
+      proc.stderr.on("data", (data) => {
+        const text = data.toString();
+        const timeMatch = text.match(/time=(\d{2}):(\d{2}):(\d{2})/);
+        if (timeMatch) {
+          const hours = parseInt(timeMatch[1], 10);
+          const minutes = parseInt(timeMatch[2], 10);
+          const seconds = parseInt(timeMatch[3], 10);
+          const currentSeconds = hours * 3600 + minutes * 60 + seconds;
+          const percentage = Math.min(Math.round((currentSeconds / duration) * 100), 99);
+          onProgress(percentage);
+        } else {
+          onLog(text);
+        }
+      });
+
+      proc.on("close", (code) => {
+        const fileCreatedSuccessfully = fs.existsSync(outputPath) && fs.statSync(outputPath).size > 10000;
+        if (code === 0 && fileCreatedSuccessfully) {
+          onProgress(100);
+          onLog(`Shorts video successfully created at ${outputPath}`);
+          resolve(outputPath);
+        } else {
+          reject(new Error(`FFmpeg Shorts process exited with code ${code}`));
+        }
+      });
+    });
+  }
 }
 
 module.exports = new FFmpegHelper();
