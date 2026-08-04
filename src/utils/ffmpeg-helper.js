@@ -336,7 +336,7 @@ class FFmpegHelper {
         const escapedText = hookText.replace(/'/g, "'\\''").toLowerCase();
         // Use relative path to avoid colon and backslash issues on Windows
         const fontParam = fs.existsSync(localFontPath) ? "fontfile='arial.ttf'" : "font='Arial'";
-        vfFilters.push(`drawtext=text='${escapedText}':${fontParam}:x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=20:shadowcolor=black:shadowx=1:shadowy=1`);
+        vfFilters.push(`drawtext=text='${escapedText}':${fontParam}:x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=48:shadowcolor=black:shadowx=2:shadowy=2`);
       }
 
       const cmd = [
