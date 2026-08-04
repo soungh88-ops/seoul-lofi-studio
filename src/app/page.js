@@ -1199,7 +1199,8 @@ export default function Home() {
         body: JSON.stringify({
           videoName: latestVideo.name,
           theme: topTrendingTheme.title,
-          enHookTitle: topTrendingTheme.enHookTitle
+          enHookTitle: topTrendingTheme.enHookTitle,
+          durationHours: targetDurationHours
         })
       });
 
