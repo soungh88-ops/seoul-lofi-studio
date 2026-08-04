@@ -1,14 +1,28 @@
 import { DOKKAEBI_DNA_PRESETS, getDokkaebiDNAById } from "../data/dokkaebi-dna.js";
 
 /**
+ * Helper to remove Korean (Hangul) and extract English parenthetical translations.
+ */
+function cleanToEnglish(str) {
+  if (!str) return "";
+  // Find all matches inside parentheses (e.g., "가야금 (Gayageum)" -> "Gayageum")
+  const matches = [...str.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim());
+  if (matches.length > 0) {
+    return matches.join(", ");
+  }
+  // Otherwise, remove all Hangul characters
+  return str.replace(/[\uac00-\ud7a3\u1100-\u11ff\u3130-\u318f]/g, "").replace(/\s+/g, " ").trim();
+}
+
+/**
  * 1. Generate 3-Part YouTube Title Formula
  * [Usage Purpose] + [Korean Music / Atmosphere] + [Dokkaebi World Name]
  * Example: "Korean Lofi for Deep Work | Dokkaebi’s Night Workshop"
  */
 export function generate3PartTitle({ purpose = "Deep Work & Study", koreanGenre = "Korean Gukak Lofi", loreName = "Dokkaebi's Night Workshop" }) {
-  const cleanPurpose = purpose.trim();
-  const cleanGenre = koreanGenre.trim();
-  const cleanLore = loreName.trim();
+  const cleanPurpose = cleanToEnglish(purpose);
+  const cleanGenre = cleanToEnglish(koreanGenre);
+  const cleanLore = cleanToEnglish(loreName);
   return `${cleanPurpose} | ${cleanGenre} - ${cleanLore}`;
 }
 
@@ -29,10 +43,10 @@ export function generate9StepDescription({
   const dna = getDokkaebiDNAById(characterId);
 
   // 1. Purpose
-  const step1 = `🎧 Purpose: ${purpose} | Designed for 100% focus, long work sessions, and relaxing nights.`;
+  const step1 = `🎧 Purpose: ${cleanToEnglish(purpose)} | Designed for 100% focus, long work sessions, and relaxing nights.`;
 
   // 2. Short Intro
-  const step2 = `✨ Welcome to Dokkaebi Lofi Studio.\n"Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."\n\nMeet ${dna.nameEn}, born from an ${dna.birthObject}. Sit beside this mischievous, comforting spirit during your long night.`;
+  const step2 = `✨ Welcome to Dokkaebi Lofi Studio.\n"Objects remember human warmth. Music remembers human nights. From that memory, a Dokkaebi is born."\n\nMeet ${dna.nameEn}, born from an ${cleanToEnglish(dna.birthObject)}. Sit beside this mischievous, comforting spirit during your long night.`;
 
   // 3. Tracklist & Timestamps
   let step3 = "🎵 Tracklist & Timestamps:\n";
@@ -40,26 +54,26 @@ export function generate9StepDescription({
     tracklist.forEach((t, index) => {
       const minutes = String(Math.floor((index * 180) / 60)).padStart(2, "0");
       const seconds = String((index * 180) % 60).padStart(2, "0");
-      step3 += `${minutes}:${seconds} - ${t.title || `Track ${index + 1}`}\n`;
+      step3 += `${minutes}:${seconds} - ${cleanToEnglish(t.title) || `Track ${index + 1}`}\n`;
     });
   } else {
     step3 += "00:00 - Track 01: The Dokkaebi Awakens\n03:00 - Track 02: Moonlit Hanok Study\n06:00 - Track 03: Rainy Courtyard Solitude";
   }
 
   // 4. Character Lore
-  const step4 = `📜 Dokkaebi Lore & Worldbuilding:\n${customLoreText || `Every track gives an old object a new memory — and from that memory, a new Dokkaebi awakens. ${dna.nameEn} uses ${dna.primaryInst} and ${dna.rhythm} to keep you calm and focused.`}`;
+  const step4 = `📜 Dokkaebi Lore & Worldbuilding:\n${customLoreText ? cleanToEnglish(customLoreText) : `Every track gives an old object a new memory — and from that memory, a new Dokkaebi awakens. ${dna.nameEn} uses ${cleanToEnglish(dna.primaryInst)} and ${cleanToEnglish(dna.rhythm)} to keep you calm and focused.`}`;
 
   // 5. Cultural Inspirations & Sources
-  const step5 = `🏛️ Cultural Inspiration:\n${culturalSources || `Inspired by ancient Korean animistic traditions and traditional roof-tile motifs (Gwimyeonwa). Cultural information cited from National Folk Museum of Korea & National Gyeongju Museum archives.`}`;
+  const step5 = `🏛️ Cultural Inspiration:\n${cleanToEnglish(culturalSources) || `Inspired by ancient Korean animistic traditions and traditional roof-tile motifs (Gwimyeonwa). Cultural information cited from National Folk Museum of Korea & National Gyeongju Museum archives.`}`;
 
   // 6. AI Usage Disclosure (Lyria 3)
   const step6 = `🤖 AI Music Disclosure:\nMusic created with Google Lyria 3. Concept, creative direction, prompt design, track selection, editing, worldbuilding and visual production by Dokkaebi Lofi Studio.`;
 
   // 7. Creator Info
-  const step7 = `🎨 Produced & Directed by: ${creatorInfo}`;
+  const step7 = `🎨 Produced & Directed by: ${cleanToEnglish(creatorInfo)}`;
 
   // 8. Related Playlists
-  const step8 = `🔗 Official Playlists:\n` + playlists.map((p) => `• ${p}`).join("\n");
+  const step8 = `🔗 Official Playlists:\n` + playlists.map((p) => `• ${cleanToEnglish(p)}`).join("\n");
 
   // 9. Hashtags
   const step9 = hashtags.join(" ");
