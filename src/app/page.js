@@ -1179,6 +1179,43 @@ export default function Home() {
     }
   };
 
+  const handleGenerateShorts = async () => {
+    if (library.length === 0) {
+      alert("보관함에 완성된 비디오가 없습니다. 먼저 1단계~3단계 비디오 렌더링을 1회 이상 완료해 주세요!");
+      return;
+    }
+
+    const latestVideo = library[0];
+
+    setIsRendering(true);
+    setRenderStatus("rendering");
+    setRenderProgress(0);
+    setRenderLog("Initializing 24-Hour Shorts Clipper System...\n");
+
+    try {
+      const res = await fetch("/api/generate-shorts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoName: latestVideo.name,
+          theme: theme,
+          enHookTitle: enHookTitle
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setIsRendering(false);
+        setRenderStatus("error");
+        setRenderLog(`에러 발생: ${err.error || err.message}`);
+      }
+    } catch (e) {
+      setIsRendering(false);
+      setRenderStatus("error");
+      setRenderLog(`네트워크 연결 오류: ${e.message}`);
+    }
+  };
+
   const handleSendChatMessage = async (e) => {
     e.preventDefault();
     if (!chatInput.trim() || !isApiConnected) return;
@@ -3544,13 +3581,12 @@ export default function Home() {
               Kaggle GPU 엔진을 원격 구동하여 1~3시간 분량 영상을 합성합니다.
             </div>
 
-            {/* 📱 20-Track Batch YouTube Shorts Auto Generator & Sequential Uploader */}
+            {/* 📱 3-Track Batch YouTube Shorts Auto Generator & Sequential Uploader */}
             <button 
               type="button"
               className="btn-primary" 
-              onClick={() => {
-                alert("📱 [도깨비 20곡 숏츠 20개 일괄 생성 & 20일 자동 순차 업로드 알고리즘 가동!]\n\n20개 음원 곡별로 각각 60초 9:16 세로 숏츠 비디오 20개가 1초 만에 자동 생성되었습니다!\n\n유튜브 API를 통해 Day 01 ~ Day 20까지 하루 1개씩 20일간 자동 예약/순차 업로드가 완료됩니다!\n\n#Shorts #Dokkaebi #GayageumLofi 태그 자동 포함!");
-              }}
+              onClick={handleGenerateShorts}
+              disabled={isRendering || library.length === 0 || !isYouTubeConnected}
               style={{
                 padding: "12px",
                 fontSize: "14px",
@@ -3560,16 +3596,18 @@ export default function Home() {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                background: "linear-gradient(90deg, #52525b 0%, #a1a1aa 100%)",
-                border: "1px solid #a1a1aa",
-                color: "#000",
-                cursor: "pointer"
+                background: isRendering || library.length === 0 || !isYouTubeConnected
+                  ? "var(--glass-border)"
+                  : "linear-gradient(90deg, #ff007f 0%, #7928ca 100%)",
+                border: "1px solid var(--accent-pink)",
+                color: "#fff",
+                cursor: isRendering || library.length === 0 || !isYouTubeConnected ? "not-allowed" : "pointer"
               }}
             >
-              <span>📱 숏츠 20개 일괄 생성</span>
+              <span>📱 대표 쇼츠 3개 일괄 예약 생성</span>
             </button>
             <div style={{ fontSize: "11px", color: "var(--text-secondary)", textAlign: "center", marginTop: "-4px" }}>
-              20곡 개별 숏츠 비디오를 생성하고 20일 동안 순차적으로 게시합니다.
+              보관함 최신 영상에서 대표 쇼츠 3개(아침/점심/저녁용)를 잘라 24시간 릴레이 예약을 봅니다.
             </div>
           </div>
 
