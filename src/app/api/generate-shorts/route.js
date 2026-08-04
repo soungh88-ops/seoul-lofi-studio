@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-// Next.js hot-reload cache buster: 2026-08-04T13:46:00
+// Next.js hot-reload cache buster: 2026-08-04T14:22:00
 import fs from "fs";
 import path from "path";
 
@@ -71,7 +71,7 @@ export async function POST(request) {
             num: 1,
             startTime: 0, // Track 1
             hookText: "for your deep focus...",
-            title: `[Shorts] Gayageum Lofi: ${cleanTitleBase} - Part 1 🌸`,
+            title: `[Shorts] Gayageum Lofi: ${cleanTitleBase} - Part 1 👹`,
             instrumentTag: "gayageum",
             publishOffsetHours: 2 // 2 hours later
           },
@@ -79,7 +79,7 @@ export async function POST(request) {
             num: 2,
             startTime: 1260, // Track 8 (~21 mins)
             hookText: "feel the rhythm...",
-            title: `[Shorts] Haegeum Fiddle Lofi: ${cleanTitleBase} - Part 2 ☕`,
+            title: `[Shorts] Haegeum Fiddle Lofi: ${cleanTitleBase} - Part 2 👹`,
             instrumentTag: "haegeum",
             publishOffsetHours: 14 // Tomorrow morning
           },
@@ -87,7 +87,7 @@ export async function POST(request) {
             num: 3,
             startTime: 2520, // Track 15 (~42 mins)
             hookText: "relax your mind...",
-            title: `[Shorts] Daegeum Flute Lofi: ${cleanTitleBase} - Part 3 💤`,
+            title: `[Shorts] Daegeum Flute Lofi: ${cleanTitleBase} - Part 3 👹`,
             instrumentTag: "daegeum",
             publishOffsetHours: 18 // Tomorrow lunch
           }
