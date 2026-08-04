@@ -1198,8 +1198,8 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           videoName: latestVideo.name,
-          theme: theme,
-          enHookTitle: enHookTitle
+          theme: topTrendingTheme.title,
+          enHookTitle: topTrendingTheme.enHookTitle
         })
       });
 
