@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
-// Next.js hot-reload cache buster: 2026-08-04T08:22:30
+// Next.js hot-reload cache buster: 2026-08-04T11:32:00
 const ffmpegHelper = require("@/utils/ffmpeg-helper");
 const geminiHelper = require("@/utils/gemini");
 import { aiVideoHelper } from "@/utils/ai-video";
@@ -250,6 +250,15 @@ export async function POST(request) {
             await generateSynthesizedTrack(sampleMp3, 180, i);
           }
           resolvedAudioPaths.push(sampleMp3);
+        }
+      }
+
+      // Loop the resolved tracks to match the target durationHours (each sequence of 20 tracks is ~1 hour)
+      if (!isTestMode && durationHours > 1 && resolvedAudioPaths.length > 0) {
+        const singleSequencePaths = [...resolvedAudioPaths];
+        const repeats = Math.max(Math.round(durationHours), 1);
+        for (let r = 1; r < repeats; r++) {
+          resolvedAudioPaths.push(...singleSequencePaths);
         }
       }
 
