@@ -326,33 +326,53 @@ class FFmpegHelper {
         }
       }
 
-      const vfFilters = [
-        `crop=in_h*9/16:in_h`,
-        `noise=alls=6:allf=t+u`
-      ];
+      const logoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
+      const hasLogo = fs.existsSync(logoPath);
 
-      if (hookText) {
-        // Escape single quotes for drawtext filter and force lowercase
-        const escapedText = hookText.replace(/'/g, "'\\''").toLowerCase();
-        // Use relative path to avoid colon and backslash issues on Windows
-        const fontParam = fs.existsSync(localFontPath) ? "fontfile='arial.ttf'" : "font='Arial'";
-        vfFilters.push(`drawtext=text='${escapedText}':${fontParam}:x=(w-text_w)/2:y=h/4:fontcolor=white:fontsize=48:shadowcolor=black:shadowx=2:shadowy=2`);
+      let cmd;
+      if (hasLogo) {
+        // Overlay transparent dokkaebi_logo.png in the center of the vertical frame (width 180px)
+        const filterComplex = [
+          `[0:v]crop=in_h*9/16:in_h,noise=alls=6:allf=t+u[bg]`,
+          `[1:v]scale=180:-1[logo]`,
+          `[bg][logo]overlay=(W-w)/2:(H-h)/2`
+        ].join(";");
+
+        cmd = [
+          this.ffmpegPath,
+          `-ss ${startTime}`,
+          `-t ${duration}`,
+          `-i "${longVideoPath}"`,
+          `-i "${logoPath}"`,
+          `-filter_complex "${filterComplex}"`,
+          `-c:v libx264`,
+          `-tune stillimage`,
+          `-pix_fmt yuv420p`,
+          `-c:a aac`,
+          `-b:a 192k`,
+          `-y`,
+          `"${outputPath}"`
+        ].join(" ");
+      } else {
+        const vfFilters = [
+          `crop=in_h*9/16:in_h`,
+          `noise=alls=6:allf=t+u`
+        ];
+        cmd = [
+          this.ffmpegPath,
+          `-ss ${startTime}`,
+          `-t ${duration}`,
+          `-i "${longVideoPath}"`,
+          `-vf "${vfFilters.join(",")}"`,
+          `-c:v libx264`,
+          `-tune stillimage`,
+          `-pix_fmt yuv420p`,
+          `-c:a aac`,
+          `-b:a 192k`,
+          `-y`,
+          `"${outputPath}"`
+        ].join(" ");
       }
-
-      const cmd = [
-        this.ffmpegPath,
-        `-ss ${startTime}`,
-        `-t ${duration}`,
-        `-i "${longVideoPath}"`,
-        `-vf "${vfFilters.join(",")}"`,
-        `-c:v libx264`,
-        `-tune stillimage`,
-        `-pix_fmt yuv420p`,
-        `-c:a aac`,
-        `-b:a 192k`,
-        `-y`,
-        `"${outputPath}"`
-      ].join(" ");
 
       onLog(`Running FFmpeg Shorts command:\n${cmd}`);
 
