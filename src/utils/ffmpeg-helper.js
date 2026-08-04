@@ -223,13 +223,13 @@ class FFmpegHelper {
         mappedAudioLabel = "[audio_out]";
 
         // Generate glowing neon audio spectrum wave (centered line mode, green/cyan glow, transparent black key)
-        filterComplex += `; [audio_wave]showwaves=s=200x200:mode=cline:colors=0x00FF66|0x00FFFF:draw=full,colorkey=black:0.1:0.1[wave]`;
-        filterComplex += `; [wave]format=rgba,colorchannelmixer=aa=0.6[wave_trans]`;
+        // Positioned immediately under the logo watermark: Logo is 160x160 at (40,40). Wave is 120x30 centered horizontally right below at (60, 200)
+        filterComplex += `; [audio_wave]showwaves=s=120x30:mode=cline:colors=0x00FF66|0x00FFFF:draw=full,colorkey=black:0.1:0.1[wave]`;
+        filterComplex += `; [wave]format=rgba,colorchannelmixer=aa=0.7[wave_trans]`;
         
-        // Scale logo & Overlay the pulsing wave (centered at 20,20) and then the logo (at 40,40)
         const videoIn = baseVideoLabel.startsWith("[") ? baseVideoLabel : `[${baseVideoLabel}]`;
         filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]`;
-        filterComplex += `; ${videoIn}[wave_trans]overlay=20:20[v_wave_over]`;
+        filterComplex += `; ${videoIn}[wave_trans]overlay=60:200[v_wave_over]`;
         filterComplex += `; [v_wave_over][dok_scaled]overlay=40:40[v_dok_over]`;
         finalVideoLabel = "[v_dok_over]";
       } else if (dokkaebiInputIndex !== -1) {
