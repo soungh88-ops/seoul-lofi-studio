@@ -159,11 +159,11 @@ class FFmpegHelper {
         ambientInputIndex = 1 + audioTracks.length;
       }
 
-      // Optional Input: Dokkaebi Mascot Sticker Logo
-      const dokkaebiLogoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
+      // Optional Input: transparent 22-band reactive Dokkaebi sticker
+      const dokkaebiLogoPath = path.join(process.cwd(), "public", "dokkaebi_reactive_sticker.webm");
       let dokkaebiInputIndex = -1;
       if (fs.existsSync(dokkaebiLogoPath)) {
-        cmdInputs.push(`-i "${dokkaebiLogoPath}"`);
+        cmdInputs.push(`-stream_loop -1 -c:v libvpx-vp9 -i "${dokkaebiLogoPath}"`);
         dokkaebiInputIndex = 1 + audioTracks.length + (ambientPath ? 1 : 0);
       }
 
@@ -218,19 +218,10 @@ class FFmpegHelper {
       let mappedAudioLabel = finalAudioLabel;
       const sep = filterComplex.trim().endsWith(";") ? "" : ";";
       if (enableNeonDokkaebi && dokkaebiInputIndex !== -1) {
-        // Split final audio: one for final render, one for driving showwaves visual
-        filterComplex += `${sep} ${finalAudioLabel}asplit=2[audio_out][audio_wave]`;
-        mappedAudioLabel = "[audio_out]";
-
-        // Generate glowing neon audio spectrum wave (centered line mode, green/cyan glow, transparent black key)
-        // Positioned immediately under the logo watermark: Logo is 160x160 at (40,40). Wave is 120x30 centered horizontally right below at (60, 200)
-        filterComplex += `; [audio_wave]showwaves=s=120x30:mode=cline:colors=0x00FF66|0x00FFFF:draw=full,colorkey=black:0.1:0.1[wave]`;
-        filterComplex += `; [wave]format=rgba,colorchannelmixer=aa=0.7[wave_trans]`;
-        
+        // The WebM already contains the transparent logo, independent 22-band bars and peak caps.
         const videoIn = baseVideoLabel.startsWith("[") ? baseVideoLabel : `[${baseVideoLabel}]`;
-        filterComplex += `; [${dokkaebiInputIndex}:v]scale=160:160[dok_scaled]`;
-        filterComplex += `; ${videoIn}[wave_trans]overlay=60:200[v_wave_over]`;
-        filterComplex += `; [v_wave_over][dok_scaled]overlay=40:40[v_dok_over]`;
+        filterComplex += `${sep} [${dokkaebiInputIndex}:v]scale=260:260,format=rgba[dok_reactive]`;
+        filterComplex += `; ${videoIn}[dok_reactive]overlay=40:40:format=auto[v_dok_over]`;
         finalVideoLabel = "[v_dok_over]";
       } else if (dokkaebiInputIndex !== -1) {
         // Simple static overlay if neon is disabled
@@ -326,15 +317,15 @@ class FFmpegHelper {
         }
       }
 
-      const logoPath = path.join(process.cwd(), "public", "dokkaebi_logo.png");
+      const logoPath = path.join(process.cwd(), "public", "dokkaebi_reactive_sticker.webm");
       const hasLogo = fs.existsSync(logoPath);
 
       let cmd;
       if (hasLogo) {
-        // Overlay transparent dokkaebi_logo.png in the center of the vertical frame (width 180px)
+        // Overlay the complete transparent reactive sticker in the center of the vertical frame.
         const filterComplex = [
           `[0:v]crop=in_h*9/16:in_h,noise=alls=6:allf=t+u[bg]`,
-          `[1:v]scale=180:-1[logo]`,
+          `[1:v]scale=520:-1:flags=lanczos,format=rgba[logo]`,
           `[bg][logo]overlay=(W-w)/2:(H-h)/2`
         ].join(";");
 
@@ -343,6 +334,8 @@ class FFmpegHelper {
           `-ss ${startTime}`,
           `-t ${duration}`,
           `-i "${longVideoPath}"`,
+          `-stream_loop -1`,
+          `-c:v libvpx-vp9`,
           `-i "${logoPath}"`,
           `-filter_complex "${filterComplex}"`,
           `-c:v libx264`,
