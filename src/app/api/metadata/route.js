@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+// Next.js hot-reload cache buster: 2026-08-04T12:15:00
 const geminiHelper = require("@/utils/gemini");
 const youtubeHelper = require("@/utils/youtube-helper");
 
