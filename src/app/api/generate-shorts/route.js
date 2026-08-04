@@ -26,11 +26,11 @@ export async function POST(request) {
       return NextResponse.json({ error: "YouTube not authenticated. Connect account first." }, { status: 401 });
     }
 
-    const shortsStatusPath = path.join(outputDir, "shorts-status.json");
+    const statusPath = path.join(outputDir, "status.json");
 
-    // Initialize status
+    // Initialize status directly in the standard status.json
     fs.writeFileSync(
-      shortsStatusPath,
+      statusPath,
       JSON.stringify({ status: "rendering", progress: 0, log: "Initializing 24-Hour Shorts Clipper System...\n" }, null, 2),
       "utf-8"
     );
@@ -43,7 +43,7 @@ export async function POST(request) {
         logs.push(`[${new Date().toLocaleTimeString()}] ${text}`);
         try {
           fs.writeFileSync(
-            shortsStatusPath,
+            statusPath,
             JSON.stringify({
               status: "rendering",
               progress: 0,
@@ -100,11 +100,11 @@ export async function POST(request) {
             hookText: plan.hookText,
             outputPath: shortOutPath,
             onProgress: (p) => {
-              // Update overall progress slightly
-              const overallProgress = Math.round(((plan.num - 1) * 33) + (p * 0.33));
+              // Update overall progress slightly (0% to 50%)
+              const overallProgress = Math.round(((plan.num - 1) * 16.6) + (p * 0.166));
               try {
                 fs.writeFileSync(
-                  shortsStatusPath,
+                  statusPath,
                   JSON.stringify({
                     status: "rendering",
                     progress: overallProgress,
@@ -140,15 +140,16 @@ export async function POST(request) {
             title: short.title,
             description: `Experience authentic Korean lofi beats.\nOriginal long-form mix: ${enHookTitle || theme}\n\n#Shorts #lofi #studybeats #koreanlofi`,
             tags: ["Shorts", "lofi", "studybeats", "koreanlofi"],
-            privacyStatus: "private", // Overridden by publishAt anyway
+            privacyStatus: "private",
             publishAt: short.publishAt,
             onProgress: (p) => {
-              const overallProgress = Math.round(50 + (shortNum - 1) * 16 + (p * 0.16));
+              // Scale from 50% to 100%
+              const overallProgress = Math.round(50 + (shortNum - 1) * 16.6 + (p * 0.166));
               try {
                 fs.writeFileSync(
-                  shortsStatusPath,
+                  statusPath,
                   JSON.stringify({
-                    status: "uploading",
+                    status: "rendering", // Keep 'rendering' state for frontend polling to continue
                     progress: overallProgress,
                     log: logs.join("\n") + `\nUploading Short ${shortNum}: ${p}%`
                   }, null, 2),
@@ -168,11 +169,11 @@ export async function POST(request) {
 
         log("🎉 [Success] All 3 Shorts have been successfully created and scheduled over the next 24 hours!");
         fs.writeFileSync(
-          shortsStatusPath,
+          statusPath,
           JSON.stringify({
             status: "success",
             progress: 100,
-            log: logs.join("\n")
+            log: logs.join("\n") + "\n🎉 [Success] 3 Shorts have been successfully created and scheduled!"
           }, null, 2),
           "utf-8"
         );
@@ -180,7 +181,7 @@ export async function POST(request) {
       } catch (err) {
         log(`Fatal Error in Shorts generation pipeline: ${err.message}`);
         fs.writeFileSync(
-          shortsStatusPath,
+          statusPath,
           JSON.stringify({
             status: "error",
             progress: 0,
