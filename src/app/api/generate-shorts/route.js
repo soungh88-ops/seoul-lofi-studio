@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+// Next.js hot-reload cache buster: 2026-08-04T13:40:00
 import fs from "fs";
 import path from "path";
 
