@@ -9,7 +9,7 @@ const youtubeHelper = require("@/utils/youtube-helper");
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { videoName, theme, enHookTitle } = body;
+    const { videoName, theme, enHookTitle, durationHours } = body;
 
     if (!videoName) {
       return NextResponse.json({ error: "Missing videoName" }, { status: 400 });
@@ -56,9 +56,14 @@ export async function POST(request) {
       };
 
       try {
-        const cleanTitleBase = (enHookTitle || theme || "Aesthetic Korean Lofi")
+        const rawTitle = (enHookTitle || theme || "Cozy Cafe Rain")
+          .replace(/\[?\d+\s*HOURS?\]?/gi, "")
+          .replace(/Hanok/gi, "Cozy")
+          .replace(/Dokkaebi/gi, "")
           .replace(/[\[\]]/g, "")
-          .substring(0, 50);
+          .replace(/\s+/g, " ")
+          .trim();
+        const cleanTitleBase = rawTitle.substring(0, 40);
 
         // Define the 3 shorts details
         const shortsPlans = [
@@ -66,21 +71,24 @@ export async function POST(request) {
             num: 1,
             startTime: 0, // Track 1
             hookText: "for your deep focus...",
-            title: `[Shorts] ${cleanTitleBase} - Part 1 🎵`,
+            title: `[Shorts] Gayageum Lofi: ${cleanTitleBase} - Part 1 🌸`,
+            instrumentTag: "gayageum",
             publishOffsetHours: 2 // 2 hours later
           },
           {
             num: 2,
             startTime: 1260, // Track 8 (~21 mins)
             hookText: "feel the rhythm...",
-            title: `[Shorts] ${cleanTitleBase} - Part 2 ☕`,
+            title: `[Shorts] Haegeum Fiddle Lofi: ${cleanTitleBase} - Part 2 ☕`,
+            instrumentTag: "haegeum",
             publishOffsetHours: 14 // Tomorrow morning
           },
           {
             num: 3,
             startTime: 2520, // Track 15 (~42 mins)
             hookText: "relax your mind...",
-            title: `[Shorts] ${cleanTitleBase} - Part 3 💤`,
+            title: `[Shorts] Daegeum Flute Lofi: ${cleanTitleBase} - Part 3 💤`,
+            instrumentTag: "daegeum",
             publishOffsetHours: 18 // Tomorrow lunch
           }
         ];
@@ -121,6 +129,7 @@ export async function POST(request) {
           generatedShortsPaths.push({
             path: shortOutPath,
             title: plan.title,
+            instrumentTag: plan.instrumentTag,
             publishAt: new Date(Date.now() + plan.publishOffsetHours * 60 * 60 * 1000).toISOString()
           });
 
@@ -136,11 +145,16 @@ export async function POST(request) {
           log(`Uploading & Scheduling Short ${shortNum}/3: "${short.title}"...`);
           log(`Scheduled publication time (24h loop): ${new Date(short.publishAt).toLocaleString()}`);
 
+          const displayDuration = durationHours ? `${durationHours} HOURS` : "2 HOURS";
+          const cleanedLongTitle = (enHookTitle || theme || "Cozy Cafe Rain")
+            .replace(/\[?\d+\s*HOURS?\]?/gi, "")
+            .trim();
+
           await youtubeHelper.uploadVideo({
             videoPath: short.path,
             title: short.title,
-            description: `Experience authentic Korean lofi beats.\nOriginal long-form mix: ${enHookTitle || theme}\n\n#Shorts #lofi #studybeats #koreanlofi`,
-            tags: ["Shorts", "lofi", "studybeats", "koreanlofi"],
+            description: `Experience authentic Korean lofi beats.\nOriginal long-form mix: ${cleanedLongTitle} | Dokkaebi Lofi [${displayDuration}]\n\n#Shorts #lofi #studybeats #koreanlofi #${short.instrumentTag}`,
+            tags: ["Shorts", "lofi", "studybeats", "koreanlofi", short.instrumentTag],
             privacyStatus: "private",
             publishAt: short.publishAt,
             onProgress: (p) => {
