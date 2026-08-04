@@ -1466,10 +1466,15 @@ export default function Home() {
         flexWrap: "wrap"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>●</span>
+          <span style={{ 
+            fontSize: "14px", 
+            color: isApiConnected ? "#00ff66" : "#ff3333", 
+            textShadow: isApiConnected ? "0 0 10px #00ff66" : "0 0 10px #ff3333",
+            transition: "color 0.3s ease, text-shadow 0.3s ease"
+          }}>●</span>
           <div>
-            <div style={{ fontSize: "13px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "1px" }}>
-              GOOGLE GEMINI AI ENGINE ACTIVE
+            <div style={{ fontSize: "13px", fontWeight: "800", color: isApiConnected ? "#00ff66" : "#ff3333", letterSpacing: "1px" }}>
+              {isApiConnected ? "GOOGLE GEMINI AI ENGINE ACTIVE" : "GOOGLE GEMINI AI ENGINE DISCONNECTED"}
             </div>
             <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
               자동 프롬프트 생성, 한글 동기화 번역, AI 채팅 코칭이 제미나이 엔진으로 가동 중입니다.
