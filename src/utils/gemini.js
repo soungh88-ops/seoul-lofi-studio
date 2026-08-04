@@ -1,5 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
+// Next.js hot-reload cache buster: 2026-08-04T12:16:40
 /**
  * Helper to call Gemini for text and SEO generation with authentic Korean Dokkaebi Heritage Philosophy
  */
