@@ -127,6 +127,7 @@ class YouTubeHelper {
     tags = [],
     privacyStatus = "private", // Default to private for review
     thumbnailPath,
+    publishAt,
     onProgress // callback(percentage)
   }) {
     if (!this.isAuthenticated()) {
@@ -152,8 +153,9 @@ class YouTubeHelper {
             defaultLanguage: "en"
           },
           status: {
-            privacyStatus: privacyStatus,
-            selfDeclaredMadeForKids: false
+            privacyStatus: publishAt ? "private" : privacyStatus,
+            selfDeclaredMadeForKids: false,
+            ...(publishAt ? { publishAt } : {})
           }
         },
         media: {
